@@ -13,33 +13,6 @@ MagicShroom is an API that contains all magic cards in existance. It allows user
 | Card     | id, cardName, colorIdentity, colors, convertedManaCost, foreignData, legalities, manaCost, printings, purchaseUrls, rulings, scryfallOracleId, subtypes, supertypes, text, types, uuid | A card has many information fields                  |
 
 ## 3. ER sketch
-
-erDiagram
-    USER ||--o{ DECK : owns
-    USER ||--o| ADMIN : "has admin role"
-
-    DECK ||--o{ DECK_CARD : contains
-    CARD ||--o{ DECK_CARD : included_in
-
-    CARD ||--o{ COLOR_IDENTITY : has
-    CARD ||--o{ COLOR : has
-    CARD ||--o{ FOREIGN_DATA : has
-    CARD ||--o{ LEGALITY : has
-    CARD ||--o{ PRINTING : has
-    CARD ||--o{ PURCHASE_URL : has
-    CARD ||--o{ RULING : has
-    CARD ||--o{ SUBTYPE : has
-    CARD ||--o{ SUPERTYPE : has
-    CARD ||--o{ CARD_TYPE : has
-
-    USER {
-        bigint id PK
-        string email UK
-        string name
-        string displayName
-        string role
-    }
-
 ```mermaid
 erDiagram
     USER  ||--o{ DECK : owns
