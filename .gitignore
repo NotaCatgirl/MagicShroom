@@ -49,3 +49,6 @@ node_modules/
 # ---------- OS junk ----------
 .DS_Store
 Thumbs.db
+
+# ---------- Course materials (keep local, not in the repo) ----------
+/Project_02_REST_API_v2.pdf

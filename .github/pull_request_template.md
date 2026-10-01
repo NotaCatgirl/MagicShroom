@@ -1,10 +1,15 @@
 Closes #
 
 ## What changed
+<!-- One or two sentences. -->
 
-## How I tested it
-- [ ] Unit tests pass locally
-- [ ] If the API contract changed, `docs/openapi.yaml` is updated and lints clean (`npx @redocly/cli lint docs/openapi.yaml`)
+## How to test
+<!-- Steps a reviewer can follow. -->
+
+## Checklist
+- [ ] References at least one issue above
+- [ ] Tests added or updated; `./gradlew build` passes in `backend/` or `frontend/`
+- [ ] `docs/openapi.yaml` updated if the API contract changed
+- [ ] No secrets, keys, or `.env` files committed
 
 ## Reviewers
-2 approving teammates who are not the author (1 for a team of 3).
