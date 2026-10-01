@@ -1,329 +1,429 @@
-# Starter OpenAPI contract for CST 438 Project 02.
-# Copy to docs/openapi.yaml in your repo, then replace Workout/Exercise with YOUR resources.
-# Render it:   https://editor.swagger.io  (File > Import file, or paste)
-# Lint it:     npx @redocly/cli lint docs/openapi.yaml
-# Mock it:     npx @stoplight/prism-cli mock docs/openapi.yaml   -> http://127.0.0.1:4010
+# OpenAPI contract for the MagicShroom API.
+# Render: https://editor.swagger.io
+# Lint:   npx @redocly/cli lint docs/openapi.yaml
+# Mock:   npx @stoplight/prism-cli mock docs/openapi.yaml
 openapi: 3.0.3
 
 info:
-  title: Workout Tracker API
+  title: MagicShroom API
   version: 1.0.0
   description: |
-    Example contract for a workout tracker. Users log workouts made of exercises.
-    Every error uses RFC 9457 Problem Details (see components/schemas/Problem).
+    MagicShroom is a REST API for browsing Magic: The Gathering cards and
+    managing personal decks. Public endpoints list, filter, and retrieve cards.
+    Authenticated users can create decks and manage the cards in their decks.
+    Administrators can create, replace, update, and delete cards, and delete
+    users. Collection responses support pagination, and errors use RFC 9457
+    Problem Details.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   contact:
-    name: Team 00
-    url: https://github.com/OWNER/REPO
+    name: MagicShroom Team
+    url: https://github.com/NotaCatgirl/MagicShroom
 
 servers:
   - url: http://localhost:8080
-    description: Local (docker compose up)
+    description: Local development
   - url: https://your-api.example.com
-    description: Production (replace in Sprint 3)
+    description: Production placeholder; replace after deployment
 
-# Every endpoint requires a Bearer token unless it overrides this with `security: []`.
+# Authentication is required unless an operation overrides this with security: [].
 security:
   - bearerAuth: []
 
 tags:
-  - name: Workouts
-    description: A user's own workouts
-  - name: Exercises
-    description: The shared exercise catalog
-  - name: Users
-    description: The signed-in user's own account
+  - name: Cards
+    description: Public card catalog and admin-only card management
+  - name: Decks
+    description: Decks owned by the authenticated user
   - name: Admin
-    description: Admin-only user management
+    description: Operations that require the ADMIN role
 
 paths:
-  /api/v1/workouts:
+  /api/v1/cards:
     get:
-      tags: [Workouts]
-      operationId: listMyWorkouts
-      summary: List my workouts (paginated, sortable)
+      tags: [Cards]
+      operationId: listCards
+      summary: Browse cards
+      security: []
       parameters:
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Size'
-        - name: sort
+        - name: name
           in: query
-          description: Field and direction, Spring Pageable style.
+          description: Case-insensitive card-name substring
           schema:
             type: string
-            enum: ['performedOn,desc', 'performedOn,asc']
-            default: 'performedOn,desc'
+            minLength: 1
+          example: lightning
+        - name: color
+          in: query
+          description: Color identity that the card must contain
+          schema:
+            $ref: '#/components/schemas/Color'
+        - name: sort
+          in: query
+          description: Sort field and direction
+          schema:
+            type: string
+            enum: ['cardName,asc', 'cardName,desc', 'convertedManaCost,asc', 'convertedManaCost,desc']
+            default: 'cardName,asc'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
       responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '200':
-          description: One page of the caller's workouts
+          description: One page of cards
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkoutPage'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: '#/components/schemas/CardPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
     post:
-      tags: [Workouts]
-      operationId: createWorkout
-      summary: Log a workout
+      tags: [Cards, Admin]
+      operationId: createCard
+      summary: Create a card
+      description: Requires the ADMIN role.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WorkoutCreate'
+              $ref: '#/components/schemas/CardInput'
       responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
         '201':
-          description: Created. POST is not idempotent; two calls make two workouts.
+          description: Card created
           headers:
             Location:
-              description: URL of the new workout
+              description: URL of the new card
               schema:
                 type: string
-                example: /api/v1/workouts/42
+                example: /api/v1/cards/1001
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Workout'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/v1/workouts/{workoutId}:
-    parameters:
-      - $ref: '#/components/parameters/WorkoutId'
-    get:
-      tags: [Workouts]
-      operationId: getWorkout
-      summary: Get one of my workouts
-      responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '200':
-          description: The workout
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Workout'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    put:
-      tags: [Workouts]
-      operationId: replaceWorkout
-      summary: Replace a workout (idempotent)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkoutCreate'
-      responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '200':
-          description: The replaced workout
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Workout'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    patch:
-      tags: [Workouts]
-      operationId: updateWorkout
-      summary: Change some fields of a workout
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkoutPatch'
-      responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '200':
-          description: The updated workout
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Workout'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    delete:
-      tags: [Workouts]
-      operationId: deleteWorkout
-      summary: Delete a workout
-      responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '204':
-          description: Deleted. No body.
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
-  /api/v1/exercises:
-    get:
-      tags: [Exercises]
-      operationId: listExercises
-      summary: Browse the exercise catalog (public, filterable)
-      security: []          # public: no token needed
-      parameters:
-        - name: muscleGroup
-          in: query
-          description: Only exercises for this muscle group
-          schema:
-            $ref: '#/components/schemas/MuscleGroup'
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Size'
-      responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '200':
-          description: One page of exercises
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExercisePage'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-
-  /api/v1/users/me:
-    delete:
-      tags: [Users]
-      operationId: deleteMyAccount
-      summary: Delete my own account and ALL my data
-      description: Any signed-in user. Deletes the user row and everything they own (workouts, custom exercises).
-      responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '204':
-          description: Deleted. The token is now useless.
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/v1/users:
-    get:
-      tags: [Admin]
-      operationId: listUsers
-      summary: List all users (admin only)
-      parameters:
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Size'
-      responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '200':
-          description: One page of users
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserPage'
+                $ref: '#/components/schemas/Card'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/cards/{cardId}:
+    parameters:
+      - $ref: '#/components/parameters/CardId'
+    get:
+      tags: [Cards]
+      operationId: getCard
+      summary: Get one card
+      security: []
+      responses:
+        '200':
+          description: Card details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags: [Cards, Admin]
+      operationId: replaceCard
+      summary: Completely replace a card
+      description: Requires the ADMIN role. Repeating the same request has the same result.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardInput'
+      responses:
+        '200':
+          description: Replaced card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Cards, Admin]
+      operationId: updateCard
+      summary: Change selected card fields
+      description: Requires the ADMIN role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardPatch'
+      responses:
+        '200':
+          description: Updated card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Cards, Admin]
+      operationId: deleteCard
+      summary: Delete a card
+      description: Requires the ADMIN role. Returns 409 if a deck still uses the card.
+      responses:
+        '204':
+          description: Card deleted; no response body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/decks:
+    get:
+      tags: [Decks]
+      operationId: listMyDecks
+      summary: List my decks
+      parameters:
+        - name: name
+          in: query
+          description: Case-insensitive deck-name substring
+          schema:
+            type: string
+            minLength: 1
+          example: goblins
+      responses:
+        '200':
+          description: Decks owned by the authenticated user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Deck'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Decks]
+      operationId: createDeck
+      summary: Create a deck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeckCreate'
+      responses:
+        '201':
+          description: Deck created
+          headers:
+            Location:
+              description: URL of the new deck
+              schema:
+                type: string
+                example: /api/v1/decks/42
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deck'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/decks/{deckId}:
+    parameters:
+      - $ref: '#/components/parameters/DeckId'
+    get:
+      tags: [Decks]
+      operationId: getMyDeck
+      summary: Get one of my decks
+      description: Returns 404 if the deck does not exist or belongs to another user.
+      responses:
+        '200':
+          description: Deck details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deck'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Decks]
+      operationId: updateMyDeck
+      summary: Rename one of my decks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeckPatch'
+      responses:
+        '200':
+          description: Updated deck
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deck'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Decks]
+      operationId: deleteMyDeck
+      summary: Delete one of my decks
+      description: Also deletes all deck-card rows for the deck.
+      responses:
+        '204':
+          description: Deck deleted; no response body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/decks/{deckId}/cards:
+    parameters:
+      - $ref: '#/components/parameters/DeckId'
+    post:
+      tags: [Decks]
+      operationId: addCardToMyDeck
+      summary: Add a card to one of my decks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeckCardCreate'
+      responses:
+        '201':
+          description: Card added to the deck
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeckCard'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/decks/{deckId}/cards/{cardId}:
+    parameters:
+      - $ref: '#/components/parameters/DeckId'
+      - $ref: '#/components/parameters/CardId'
+    patch:
+      tags: [Decks]
+      operationId: updateCardInMyDeck
+      summary: Change a card's quantity or section
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeckCardPatch'
+      responses:
+        '200':
+          description: Updated deck-card entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeckCard'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Decks]
+      operationId: removeCardFromMyDeck
+      summary: Remove a card from one of my decks
+      responses:
+        '204':
+          description: Card removed from the deck; no response body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
   /api/v1/users/{userId}:
     parameters:
-      - name: userId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-          example: 7
-    get:
-      tags: [Admin]
-      operationId: getUser
-      summary: View one user (admin only)
-      responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '200':
-          description: The user
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    patch:
-      tags: [Admin]
-      operationId: updateUserRole
-      summary: Grant or revoke admin (admin only)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserPatch'
-      responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
-        '200':
-          description: The updated user
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
+      - $ref: '#/components/parameters/UserId'
     delete:
       tags: [Admin]
       operationId: deleteUser
-      summary: Delete a user and all their data (admin only)
-      description: Requires the ADMIN role. A USER token gets 403.
+      summary: Delete a user
+      description: Requires the ADMIN role. Also deletes the user's decks and deck-card rows.
       responses:
-        '500':
-          $ref: '#/components/responses/InternalError'
         '204':
-          description: Deleted
-        '400':
-          $ref: '#/components/responses/BadRequest'
+          description: User deleted; no response body
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 
 components:
   securitySchemes:
@@ -331,17 +431,36 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT from the OAuth2 Authorization Code + PKCE flow (with Google, send the ID token; Google's access_token is opaque).
+      description: JWT obtained by the Android app through OAuth2 Authorization Code with PKCE
 
   parameters:
-    WorkoutId:
-      name: workoutId
+    CardId:
+      name: cardId
       in: path
       required: true
       schema:
         type: integer
         format: int64
+        minimum: 1
+        example: 1001
+    DeckId:
+      name: deckId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
         example: 42
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        example: 7
     Page:
       name: page
       in: query
@@ -353,7 +472,7 @@ components:
     Size:
       name: size
       in: query
-      description: Items per page
+      description: Number of cards per page
       schema:
         type: integer
         minimum: 1
@@ -361,116 +480,257 @@ components:
         default: 20
 
   schemas:
-    MuscleGroup:
+    Color:
       type: string
-      enum: [CHEST, BACK, LEGS, SHOULDERS, ARMS, CORE, CARDIO]
+      description: Magic color identity code; C means colorless
+      enum: [W, U, B, R, G, C]
+      example: R
 
-    Workout:
+    DeckSection:
+      type: string
+      enum: [MAINBOARD, SIDEBOARD, COMMANDER, MAYBEBOARD]
+      example: MAINBOARD
+
+    CardFields:
       type: object
-      required: [id, performedOn, exercises]
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          example: 0ea7e9f0-ffcf-5c89-bc31-8259a8ab8f8a
+        cardName:
+          type: string
+          minLength: 1
+          example: Lightning Bolt
+        colorIdentity:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Color'
+          example: [R]
+        colors:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Color'
+          example: [R]
+        convertedManaCost:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          example: 1.0
+        manaCost:
+          type: string
+          nullable: true
+          example: '{R}'
+        scryfallOracleId:
+          type: string
+          format: uuid
+          nullable: true
+        text:
+          type: string
+          nullable: true
+          example: Lightning Bolt deals 3 damage to any target.
+        types:
+          type: array
+          items:
+            type: string
+          example: [Instant]
+        subtypes:
+          type: array
+          items:
+            type: string
+        supertypes:
+          type: array
+          items:
+            type: string
+        printings:
+          type: array
+          items:
+            type: string
+        foreignData:
+          type: array
+          items:
+            $ref: '#/components/schemas/ForeignCardData'
+        legalities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardLegality'
+        purchaseUrls:
+          type: array
+          items:
+            $ref: '#/components/schemas/PurchaseUrl'
+        rulings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ruling'
+
+    CardInput:
+      description: Complete card body used by POST and PUT.
+      type: object
+      required: [uuid, cardName, colorIdentity, colors, types]
+      allOf:
+        - $ref: '#/components/schemas/CardFields'
+
+    CardPatch:
+      description: Partial card body; send at least one field.
+      type: object
+      minProperties: 1
+      allOf:
+        - $ref: '#/components/schemas/CardFields'
+
+    Card:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 1001
+      allOf:
+        - $ref: '#/components/schemas/CardInput'
+
+    ForeignCardData:
+      type: object
+      required: [language, name]
+      properties:
+        language:
+          type: string
+          example: Spanish
+        name:
+          type: string
+          example: Relámpago
+        text:
+          type: string
+          nullable: true
+
+    CardLegality:
+      type: object
+      required: [format, status]
+      properties:
+        format:
+          type: string
+          example: modern
+        status:
+          type: string
+          enum: [LEGAL, NOT_LEGAL, RESTRICTED, BANNED]
+          example: LEGAL
+
+    PurchaseUrl:
+      type: object
+      required: [vendor, url]
+      properties:
+        vendor:
+          type: string
+          example: cardKingdom
+        url:
+          type: string
+          format: uri
+          example: https://example.com/cards/lightning-bolt
+
+    Ruling:
+      type: object
+      required: [text]
+      properties:
+        date:
+          type: string
+          format: date
+          nullable: true
+          example: '2020-01-24'
+        text:
+          type: string
+          example: This spell can target any legal target.
+
+    Deck:
+      type: object
+      required: [id, userId, name, cards]
       properties:
         id:
           type: integer
           format: int64
           readOnly: true
           example: 42
-        performedOn:
-          type: string
-          format: date
-          example: '2026-10-01'
-        durationMin:
-          type: integer
-          minimum: 1
-          nullable: true
-          example: 45
-        notes:
-          type: string
-          maxLength: 500
-          nullable: true
-          example: Felt strong today
-        exercises:
-          type: array
-          items:
-            $ref: '#/components/schemas/WorkoutExercise'
-
-    WorkoutCreate:
-      description: Body for POST and PUT. PUT replaces every field.
-      type: object
-      required: [performedOn, exercises]
-      properties:
-        performedOn:
-          type: string
-          format: date
-          example: '2026-10-01'
-        durationMin:
-          type: integer
-          minimum: 1
-          nullable: true
-          example: 45
-        notes:
-          type: string
-          maxLength: 500
-          nullable: true
-        exercises:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/WorkoutExercise'
-
-    WorkoutPatch:
-      description: Body for PATCH. Send only the fields you want to change.
-      type: object
-      minProperties: 1
-      properties:
-        durationMin:
-          type: integer
-          minimum: 1
-          nullable: true
-        notes:
-          type: string
-          maxLength: 500
-          nullable: true
-
-    WorkoutExercise:
-      type: object
-      required: [exerciseId, sets, reps]
-      properties:
-        exerciseId:
+        userId:
           type: integer
           format: int64
-          example: 7
-        sets:
-          type: integer
-          minimum: 1
-          example: 3
-        reps:
-          type: integer
-          minimum: 1
-          example: 10
-        weightKg:
-          type: number
-          format: double
-          nullable: true
-          example: 60.0
-
-    Exercise:
-      type: object
-      required: [id, name, muscleGroup]
-      properties:
-        id:
-          type: integer
-          format: int64
+          readOnly: true
           example: 7
         name:
           type: string
-          example: Back Squat
-        muscleGroup:
-          $ref: '#/components/schemas/MuscleGroup'
+          example: Mono Red Burn
+        cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeckCard'
+
+    DeckCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Mono Red Burn
+
+    DeckPatch:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Updated Burn Deck
+
+    DeckCard:
+      type: object
+      required: [cardId, quantity, section]
+      properties:
+        cardId:
+          type: integer
+          format: int64
+          example: 1001
+        quantity:
+          type: integer
+          minimum: 1
+          example: 4
+        section:
+          $ref: '#/components/schemas/DeckSection'
+
+    DeckCardCreate:
+      type: object
+      required: [cardId]
+      properties:
+        cardId:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 1001
+        quantity:
+          type: integer
+          minimum: 1
+          default: 1
+          example: 4
+        section:
+          allOf:
+            - $ref: '#/components/schemas/DeckSection'
+          default: MAINBOARD
+
+    DeckCardPatch:
+      type: object
+      minProperties: 1
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          example: 3
+        section:
+          $ref: '#/components/schemas/DeckSection'
 
     PageMeta:
-      description: >-
-        Spring Data's PagedModel shape. Turn it on with
-        spring.data.web.pageable.serialization-mode=via_dto in application.properties.
       type: object
       required: [size, number, totalElements, totalPages]
       properties:
@@ -488,71 +748,19 @@ components:
           type: integer
           example: 3
 
-    WorkoutPage:
+    CardPage:
       type: object
       required: [content, page]
       properties:
         content:
           type: array
           items:
-            $ref: '#/components/schemas/Workout'
-        page:
-          $ref: '#/components/schemas/PageMeta'
-
-    ExercisePage:
-      type: object
-      required: [content, page]
-      properties:
-        content:
-          type: array
-          items:
-            $ref: '#/components/schemas/Exercise'
-        page:
-          $ref: '#/components/schemas/PageMeta'
-
-    User:
-      type: object
-      required: [id, email, displayName, role]
-      properties:
-        id:
-          type: integer
-          format: int64
-          example: 7
-        email:
-          type: string
-          format: email
-          example: sam@csumb.edu
-        displayName:
-          type: string
-          example: Sam Otter
-        role:
-          $ref: '#/components/schemas/Role'
-
-    Role:
-      type: string
-      enum: [USER, ADMIN]
-
-    UserPatch:
-      description: Body for PATCH /api/v1/users/{userId}. Today the only editable field is the role.
-      type: object
-      required: [role]
-      properties:
-        role:
-          $ref: '#/components/schemas/Role'
-
-    UserPage:
-      type: object
-      required: [content, page]
-      properties:
-        content:
-          type: array
-          items:
-            $ref: '#/components/schemas/User'
+            $ref: '#/components/schemas/Card'
         page:
           $ref: '#/components/schemas/PageMeta'
 
     Problem:
-      description: RFC 9457 Problem Details. The ONE error body every endpoint returns.
+      description: RFC 9457 Problem Details; the error body used by every endpoint.
       type: object
       required: [title, status]
       properties:
@@ -567,14 +775,14 @@ components:
           example: 404
         detail:
           type: string
-          example: Workout 42 not found
+          example: Card 1001 was not found.
         instance:
           type: string
-          example: /api/v1/workouts/42
+          example: /api/v1/cards/1001
 
   responses:
     BadRequest:
-      description: Validation failed or malformed JSON
+      description: Malformed JSON, invalid parameters, or validation failure
       content:
         application/problem+json:
           schema:
@@ -582,9 +790,9 @@ components:
           example:
             title: Bad Request
             status: 400
-            detail: One or more fields failed validation. Check the request against the contract.
+            detail: One or more fields failed validation.
     Unauthorized:
-      description: Missing or invalid token
+      description: Missing, expired, or invalid bearer token
       content:
         application/problem+json:
           schema:
@@ -593,7 +801,7 @@ components:
             title: Unauthorized
             status: 401
     Forbidden:
-      description: Valid token, but not allowed (for example, not an admin)
+      description: Valid token, but the user lacks the ADMIN role
       content:
         application/problem+json:
           schema:
@@ -602,7 +810,7 @@ components:
             title: Forbidden
             status: 403
     NotFound:
-      description: Doesn't exist, or belongs to someone else
+      description: Resource not found or not owned by the authenticated user
       content:
         application/problem+json:
           schema:
@@ -610,9 +818,18 @@ components:
           example:
             title: Not Found
             status: 404
-            detail: Workout 42 not found
+    Conflict:
+      description: Request conflicts with existing data or relationships
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            title: Conflict
+            status: 409
+            detail: The card is still used by a deck.
     InternalError:
-      description: Unexpected server error. Your app still needs to show something useful.
+      description: Unexpected server error
       content:
         application/problem+json:
           schema:
