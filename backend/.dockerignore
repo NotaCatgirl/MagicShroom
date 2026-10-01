@@ -1,0 +1,9 @@
+# Keep the build context small and keep local/secret files out of the image.
+.gradle/
+.kotlin/
+build/
+.idea/
+*.iml
+local.properties
+.env
+.env.*

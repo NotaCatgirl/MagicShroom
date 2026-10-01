@@ -16,8 +16,21 @@ repository**, names it after your API, and adds teammates as collaborators.
 | `.github/pull_request_template.md` | Every PR starts with `Closes #` and a test checklist | now |
 | `.gitignore` | Gradle, Android, IntelliJ, Node, and **secrets** (`.env`, keystores, `local.properties`) | now |
 
-Where your code goes is up to you: an `api/` and an `android/` folder in this repo (monorepo),
-or a second repo for the Android app. Write it down in an ADR.
+## Repository layout
+
+Monorepo with two **independent** Gradle builds. There is no build at the repo root: open and run
+each side from its own folder.
+
+| Path | What it is | Open with |
+|---|---|---|
+| `backend/` | Spring Boot + Kotlin API ([README](backend/README.md)) | IntelliJ IDEA → open `backend/` |
+| `frontend/` | Kotlin Android app, Jetpack Compose ([README](frontend/README.md)) | Android Studio → open `frontend/` |
+| `docs/` | Contract, proposal, diagrams, ADRs (`docs/adr/`), retros (`docs/retros/`) | |
+| `.github/` | Issue and PR templates, CI for each side | |
+
+Why two builds instead of one: the backend's Docker image builds from `backend/` alone without
+needing the Android SDK, the two sides never fight over Kotlin/Gradle plugin versions, and each
+gets its own CI job. (Candidate for ADR 0001.)
 
 ## First 15 minutes
 
