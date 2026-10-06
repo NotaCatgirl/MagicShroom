@@ -1,3 +1,13 @@
 spring:
   application:
     name: magicshroom-api
+  profiles:
+    # "mock" serves data from src/main/resources/mock-data/*.json (see repository/json/).
+    # When the Supabase repositories exist, give them their own profile and change this default.
+    default: mock
+
+magicshroom:
+  stub-auth:
+    # Caller used when a request has no X-Stub-User-Id header (2 = a regular user, 1 = admin).
+    # Goes away with StubCurrentUserResolver once OAuth2 is in place.
+    default-user-id: 2
