@@ -1,8 +1,13 @@
 spring:
   application:
     name: magicshroom-api
-  datasource:
-    url: "jdbc:postgresql://${SUPABASE_POOLER_HOST}:${SUPABASE_DB_PORT:6543}/postgres?sslmode=require&prepareThreshold=0"
-    username: "postgres.${SUPABASE_PROJECT_REF}"
-    password: ${SUPABASE_DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
+  profiles:
+    # "mock" serves data from src/main/resources/mock-data/*.json (see repository/json/).
+    # When the Supabase repositories exist, give them their own profile and change this default.
+    default: mock
+
+magicshroom:
+  stub-auth:
+    # Caller used when a request has no X-Stub-User-Id header (2 = a regular user, 1 = admin).
+    # Goes away with StubCurrentUserResolver once OAuth2 is in place.
+    default-user-id: 2

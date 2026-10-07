@@ -1,0 +1,14 @@
+[
+  { "deckId": 1, "cardId": 1, "quantity": 4, "section": "MAINBOARD" },
+  { "deckId": 1, "cardId": 12, "quantity": 4, "section": "MAINBOARD" },
+  { "deckId": 1, "cardId": 16, "quantity": 4, "section": "MAINBOARD" },
+  { "deckId": 1, "cardId": 17, "quantity": 2, "section": "SIDEBOARD" },
+  { "deckId": 2, "cardId": 3, "quantity": 4, "section": "MAINBOARD" },
+  { "deckId": 2, "cardId": 15, "quantity": 4, "section": "MAINBOARD" },
+  { "deckId": 2, "cardId": 6, "quantity": 3, "section": "MAINBOARD" },
+  { "deckId": 2, "cardId": 22, "quantity": 16, "section": "MAINBOARD" },
+  { "deckId": 3, "cardId": 2, "quantity": 4, "section": "MAINBOARD" },
+  { "deckId": 3, "cardId": 8, "quantity": 4, "section": "MAINBOARD" },
+  { "deckId": 3, "cardId": 7, "quantity": 2, "section": "MAINBOARD" },
+  { "deckId": 3, "cardId": 4, "quantity": 2, "section": "SIDEBOARD" }
+]
