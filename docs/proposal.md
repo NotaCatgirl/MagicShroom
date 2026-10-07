@@ -1,4 +1,4 @@
-# <API name> Proposal
+# MagicShroom Proposal
 
 ## 1. The pitch (one paragraph)
 MagicShroom is an API that contains all magic cards in existance. It allows users to request the information of individual cards, users can gather cards together to form decks, and request the information of the decks associated with their account. A client app would need this for any magic card information, and if it planned on implementing decks and our API would provide a simple way of building decks and accessing their information;
