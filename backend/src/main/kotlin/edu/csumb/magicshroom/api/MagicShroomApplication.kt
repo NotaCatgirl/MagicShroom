@@ -8,4 +8,6 @@ class MagicShroomApplication
 
 fun main(args: Array<String>) {
 	runApplication<MagicShroomApplication>(*args)
+
+
 }

@@ -1,0 +1,224 @@
+[
+  {
+    "id": 1, "uuid": "0318d56b-647f-4b0f-9306-9adc3312619d", "cardName": "Lightning Bolt",
+    "colorIdentity": ["R"], "colors": ["R"], "convertedManaCost": 1.0, "manaCost": "{R}",
+    "text": "Lightning Bolt deals 3 damage to any target.",
+    "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["LEA", "M10", "2XM"],
+    "foreignData": [{ "language": "Spanish", "name": "Relámpago", "text": null }],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ],
+    "purchaseUrls": [{ "vendor": "example", "url": "https://example.com/cards/lightning-bolt" }]
+  },
+  {
+    "id": 2, "uuid": "4304bea9-a8f7-4e0e-8929-6a7e8e1fdc1d", "cardName": "Counterspell",
+    "colorIdentity": ["U"], "colors": ["U"], "convertedManaCost": 2.0, "manaCost": "{U}{U}",
+    "text": "Counter target spell.",
+    "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["LEA", "MH2"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 3, "uuid": "c823b885-068a-47a4-93d5-5732d6d65af5", "cardName": "Llanowar Elves",
+    "colorIdentity": ["G"], "colors": ["G"], "convertedManaCost": 1.0, "manaCost": "{G}",
+    "text": "{T}: Add {G}.",
+    "types": ["Creature"], "subtypes": ["Elf", "Druid"], "supertypes": [], "printings": ["LEA", "DOM", "M19"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 4, "uuid": "cc8dc60c-d368-41af-8c88-4032bfcbd12e", "cardName": "Serra Angel",
+    "colorIdentity": ["W"], "colors": ["W"], "convertedManaCost": 5.0, "manaCost": "{3}{W}{W}",
+    "text": "Flying\nVigilance",
+    "types": ["Creature"], "subtypes": ["Angel"], "supertypes": [], "printings": ["LEA", "M10"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 5, "uuid": "ec71957b-35d4-477f-a4f6-74b4c732c931", "cardName": "Dark Ritual",
+    "colorIdentity": ["B"], "colors": ["B"], "convertedManaCost": 1.0, "manaCost": "{B}",
+    "text": "Add {B}{B}{B}.",
+    "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["LEA"],
+    "legalities": [
+      { "format": "modern", "status": "NOT_LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 6, "uuid": "6eebe4e0-1057-400d-846f-10a0095d0a87", "cardName": "Giant Growth",
+    "colorIdentity": ["G"], "colors": ["G"], "convertedManaCost": 1.0, "manaCost": "{G}",
+    "text": "Target creature gets +3/+3 until end of turn.",
+    "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["LEA", "M10"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 7, "uuid": "c3351b55-1402-421a-b07e-a068ddd44f2f", "cardName": "Wrath of God",
+    "colorIdentity": ["W"], "colors": ["W"], "convertedManaCost": 4.0, "manaCost": "{2}{W}{W}",
+    "text": "Destroy all creatures. They can't be regenerated.",
+    "types": ["Sorcery"], "subtypes": [], "supertypes": [], "printings": ["LEA", "10E"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 8, "uuid": "e3fffe1b-ab5d-4d78-9d58-ec2b4f0e89b2", "cardName": "Swords to Plowshares",
+    "colorIdentity": ["W"], "colors": ["W"], "convertedManaCost": 1.0, "manaCost": "{W}",
+    "text": "Exile target creature. Its controller gains life equal to its power.",
+    "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["LEA", "ICE"],
+    "legalities": [
+      { "format": "modern", "status": "NOT_LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 9, "uuid": "9b5cc85b-f10d-4b54-af52-a5c798bc4db0", "cardName": "Shivan Dragon",
+    "colorIdentity": ["R"], "colors": ["R"], "convertedManaCost": 6.0, "manaCost": "{4}{R}{R}",
+    "text": "Flying\n{R}: Shivan Dragon gets +1/+0 until end of turn.",
+    "types": ["Creature"], "subtypes": ["Dragon"], "supertypes": [], "printings": ["LEA", "M10"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 10, "uuid": "06670db7-efa5-4b51-88ac-d5da5e65953c", "cardName": "Sol Ring",
+    "colorIdentity": [], "colors": [], "convertedManaCost": 1.0, "manaCost": "{1}",
+    "text": "{T}: Add {C}{C}.",
+    "types": ["Artifact"], "subtypes": [], "supertypes": [], "printings": ["LEA", "C21"],
+    "legalities": [
+      { "format": "modern", "status": "NOT_LEGAL" }, { "format": "legacy", "status": "BANNED" },
+      { "format": "vintage", "status": "RESTRICTED" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 11, "uuid": "5f4782ac-de72-4516-b11d-3dd197ccb604", "cardName": "Birds of Paradise",
+    "colorIdentity": ["G"], "colors": ["G"], "convertedManaCost": 1.0, "manaCost": "{G}",
+    "text": "Flying\n{T}: Add one mana of any color.",
+    "types": ["Creature"], "subtypes": ["Bird"], "supertypes": [], "printings": ["LEA", "M12"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 12, "uuid": "f61a23c7-0d66-4011-bfee-111f82c883bf", "cardName": "Goblin Guide",
+    "colorIdentity": ["R"], "colors": ["R"], "convertedManaCost": 1.0, "manaCost": "{R}",
+    "text": "Haste\nWhenever Goblin Guide attacks, defending player reveals the top card of their library. If it's a land card, that player puts it into their hand.",
+    "types": ["Creature"], "subtypes": ["Goblin", "Scout"], "supertypes": [], "printings": ["ZEN"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 13, "uuid": "fde48a6e-ea5e-4f86-8aed-092d8a151d66", "cardName": "Brainstorm",
+    "colorIdentity": ["U"], "colors": ["U"], "convertedManaCost": 1.0, "manaCost": "{U}",
+    "text": "Draw three cards, then put two cards from your hand on top of your library in any order.",
+    "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["ICE", "MMQ"],
+    "legalities": [
+      { "format": "modern", "status": "NOT_LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "RESTRICTED" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 14, "uuid": "bcb0192b-6ec7-49f9-a596-a473d30c3211", "cardName": "Doom Blade",
+    "colorIdentity": ["B"], "colors": ["B"], "convertedManaCost": 2.0, "manaCost": "{1}{B}",
+    "text": "Destroy target nonblack creature.",
+    "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["M10"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 15, "uuid": "eb2c5649-afb2-4acc-9576-9a7cfda31d22", "cardName": "Elvish Mystic",
+    "colorIdentity": ["G"], "colors": ["G"], "convertedManaCost": 1.0, "manaCost": "{G}",
+    "text": "{T}: Add {G}.",
+    "types": ["Creature"], "subtypes": ["Elf", "Druid"], "supertypes": [], "printings": ["M14"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 16, "uuid": "f93bd77c-b0ca-404a-9f99-3058817f248c", "cardName": "Lava Spike",
+    "colorIdentity": ["R"], "colors": ["R"], "convertedManaCost": 1.0, "manaCost": "{R}",
+    "text": "Lava Spike deals 3 damage to target player or planeswalker.",
+    "types": ["Sorcery"], "subtypes": ["Arcane"], "supertypes": [], "printings": ["CHK"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 17, "uuid": "0706fcdc-cf41-40ed-995c-31626dbf6fda", "cardName": "Smash to Smithereens",
+    "colorIdentity": ["R"], "colors": ["R"], "convertedManaCost": 2.0, "manaCost": "{1}{R}",
+    "text": "Destroy target artifact. Smash to Smithereens deals 3 damage to that artifact's controller.",
+    "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["SOM"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 18, "uuid": "0ba91c82-c13b-4228-850e-9515f630339d", "cardName": "Lightning Helix",
+    "colorIdentity": ["R", "W"], "colors": ["R", "W"], "convertedManaCost": 2.0, "manaCost": "{R}{W}",
+    "text": "Lightning Helix deals 3 damage to any target and you gain 3 life.",
+    "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["RAV"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 19, "uuid": "6c9857d5-8df0-4a82-a132-c3e7b462534f", "cardName": "Thoughtseize",
+    "colorIdentity": ["B"], "colors": ["B"], "convertedManaCost": 1.0, "manaCost": "{B}",
+    "text": "Target player reveals their hand. You choose a nonland card from it. That player discards that card. You lose 2 life.",
+    "types": ["Sorcery"], "subtypes": [], "supertypes": [], "printings": ["LRW", "THS"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 20, "uuid": "a98d3628-c1df-429b-87ac-9f67f1d9502a", "cardName": "Tarmogoyf",
+    "colorIdentity": ["G"], "colors": ["G"], "convertedManaCost": 2.0, "manaCost": "{1}{G}",
+    "text": "Tarmogoyf's power is equal to the number of card types among cards in all graveyards and its toughness is equal to that number plus 1.",
+    "types": ["Creature"], "subtypes": ["Lhurgoyf"], "supertypes": [], "printings": ["FUT", "MMA"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 21, "uuid": "aaeb8788-7205-42f0-a175-ac0480afbeb2", "cardName": "Ornithopter",
+    "colorIdentity": [], "colors": [], "convertedManaCost": 0.0, "manaCost": "{0}",
+    "text": "Flying",
+    "types": ["Artifact", "Creature"], "subtypes": ["Thopter"], "supertypes": [], "printings": ["ATQ", "M11"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  },
+  {
+    "id": 22, "uuid": "30578ba1-debe-4647-94b0-bc7a0a0ed715", "cardName": "Forest",
+    "colorIdentity": ["G"], "colors": [], "convertedManaCost": 0.0, "manaCost": null,
+    "text": "({T}: Add {G}.)",
+    "types": ["Land"], "subtypes": ["Forest"], "supertypes": ["Basic"], "printings": ["LEA"],
+    "legalities": [
+      { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
+      { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }
+    ]
+  }
+]
