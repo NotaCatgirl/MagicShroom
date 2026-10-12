@@ -15,10 +15,26 @@ emulator, press Run.
 
 ## Talking to the API
 
-- From the emulator, your computer is `10.0.2.2`, not `localhost`.
-- No backend yet? Run the mock from the repo root: `npx @stoplight/prism-cli mock docs/openapi.yaml`,
-  then point the app at `http://10.0.2.2:4010`.
-- Plain HTTP to `10.0.2.2` needs a network security config. The deployed API must be HTTPS.
+Start the backend first (`cd ../backend && ./gradlew bootRun`). The Search screen loads cards from it
+through `data/api/MagicShroomApi.kt` (Retrofit; every contract route is already declared there).
+
+- The debug build calls `http://10.0.2.2:8080/` (`API_BASE_URL` in `app/build.gradle.kts`). From the
+  emulator, your computer is `10.0.2.2`, not `localhost`.
+- Plain HTTP is allowed only to `10.0.2.2` and `localhost` (`res/xml/network_security_config.xml`).
+  The deployed API must be HTTPS.
+- Until OAuth sign-in exists, `StubAuthInterceptor` sends `X-Stub-User-Id` (`STUB_USER_ID`).
+- No backend? Run the mock from the repo root: `npx @stoplight/prism-cli mock docs/openapi.yaml`,
+  then set `API_BASE_URL` to `http://10.0.2.2:4010/`.
+
+To call a new route: add a repository function wrapping it in `apiCall { ... }` (see
+`CardRepository`), expose it from `data/AppContainer.kt`, and handle `ApiResult.Success` /
+`ApiResult.Failure` in the ViewModel (see `ui/search/SearchViewModel.kt`).
+
+## Open work
+
+Unfinished pieces are marked in code as `TODO(area)`, with area one of `auth`, `db`, `api`, `ui`,
+`nav`, `contract`, `deploy`, `test`. See them in Android Studio's **TODO** tool window or with
+`grep -rn "TODO(" ..` from this folder.
 
 ## Package layout (`edu.csumb.magicshroom`)
 

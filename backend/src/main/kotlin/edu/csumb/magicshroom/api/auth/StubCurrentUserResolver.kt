@@ -11,6 +11,7 @@ import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
 
+// TODO(auth): replace with a resolver that reads the validated JWT (Spring Security Resource Server).
 /**
  * TEMPORARY stand-in for OAuth2 so protected routes can be exercised before sign-in exists.
  *

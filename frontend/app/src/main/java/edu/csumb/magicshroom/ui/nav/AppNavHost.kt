@@ -20,6 +20,9 @@ private object AppRoute {
     const val ACCOUNT = "account"
 }
 
+// TODO(auth): replace FakeAuthRepository with Google sign-in (Authorization Code + PKCE, e.g. AppAuth).
+//  The real app never collects passwords; isLoggedIn should come from the stored token instead.
+// TODO(nav): add the Detail and Admin screens. The prompt requires Login, List (search), Detail, Admin.
 /**
  * Defines the mock login, search, and account navigation flow.
  *
@@ -63,6 +66,8 @@ fun AppNavHost(authRepository: FakeAuthRepository = remember { FakeAuthRepositor
         }
 
         composable(AppRoute.ACCOUNT) {
+            // TODO(api): show the real signed-in user. Needs a route such as GET /api/v1/users/me,
+            //  which is not in docs/openapi.yaml yet.
             UserScreen(
                 user = authRepository.mockUser,
                 onBack = { navController.popBackStack() },

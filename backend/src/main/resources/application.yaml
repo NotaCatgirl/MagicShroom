@@ -5,6 +5,9 @@ spring:
     # "mock" serves data from src/main/resources/mock-data/*.json (see repository/json/).
     # When the Supabase repositories exist, give them their own profile and change this default.
     default: mock
+  # TODO(db): no datasource is configured, so bootRun falls back to in-memory H2. Spring does not read
+  #  .env files: map the SUPABASE_* variables from .env.example to spring.datasource.url / username /
+  #  password with ${...} placeholders, and set them in the run configuration or shell.
 
 magicshroom:
   stub-auth:
