@@ -47,8 +47,8 @@ class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: J
 
     /** Projects complete archived foreign data into the stable API response fields. */
     private fun foreignData(raw: String): List<ForeignCardData> = json.readTree(raw).toList().map { item ->
-        ForeignCardData(item.path("language").asText(), item.path("name").asText(),
-            item.path("text").takeUnless { it.isMissingNode || it.isNull }?.asText())
+        ForeignCardData(item.path("language").asString(), item.path("name").asString(),
+            item.path("text").takeUnless { it.isMissingNode || it.isNull }?.asString())
     }
 
     /** Reads the entire catalog for maintenance tasks. */

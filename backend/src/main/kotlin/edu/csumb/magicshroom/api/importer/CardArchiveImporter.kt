@@ -61,7 +61,7 @@ class CardArchiveImporter(
             mtgo_id = ?, names = ?, power = ?, side = ?, toughness = ?, card_type = ? where id = ?"""
         jdbc.update { connection -> connection.prepareStatement(sql).also { ps ->
             ps.setString(1, node.path("foreignData").toString())
-            ps.setArray(2, connection.createArrayOf("text", node.path("colorIndicator").toList().map { it.asText() }.toTypedArray()))
+            ps.setArray(2, connection.createArrayOf("text", node.path("colorIndicator").toList().map { it.asString() }.toTypedArray()))
             ps.setObject(3, node.path("edhrecRank").intOrNull())
             ps.setObject(4, node.path("faceConvertedManaCost").doubleOrNull())
             ps.setString(5, node.path("hand").textOrNull())
@@ -74,7 +74,7 @@ class CardArchiveImporter(
             ps.setObject(12, node.path("mtgArenaId").intOrNull())
             ps.setObject(13, node.path("mtgoFoilId").intOrNull())
             ps.setObject(14, node.path("mtgoId").intOrNull())
-            ps.setArray(15, connection.createArrayOf("text", node.path("names").toList().map { it.asText() }.toTypedArray()))
+            ps.setArray(15, connection.createArrayOf("text", node.path("names").toList().map { it.asString() }.toTypedArray()))
             ps.setString(16, node.path("power").textOrNull())
             ps.setString(17, node.path("side").textOrNull())
             ps.setString(18, node.path("toughness").textOrNull())
@@ -93,7 +93,7 @@ class CardArchiveImporter(
     private fun JsonNode.booleanOrNull(): Boolean? = takeUnless { it.isMissingNode || it.isNull }?.asBoolean()
 
     /** Returns null for absent or JSON null archive fields. */
-    private fun JsonNode.textOrNull(): String? = takeUnless { it.isMissingNode || it.isNull }?.asText()
+    private fun JsonNode.textOrNull(): String? = takeUnless { it.isMissingNode || it.isNull }?.asString()
 
     companion object {
         private const val MAX_DATABASE_BYTES = 400_000_000L
