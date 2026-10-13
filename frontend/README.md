@@ -1,34 +1,21 @@
-# MagicShroom Android app (frontend)
+# MagicShroom Android app
 
-Kotlin + Jetpack Compose client that proves the API works end to end. Four screens: Login,
-List, Detail, Admin.
+The Compose app browses public cards and lets a Google signed-in user create a personal deck,
+add cards, and remove them. Supabase Auth handles OAuth and the session; the app calls the
+MagicShroom backend with the Supabase access token. It does not connect to PostgreSQL.
 
-## Run it
+Open this folder in Android Studio and set Gradle properties locally:
 
-Open **this folder** (`frontend/`) in Android Studio, not the repo root. Let Gradle sync, pick an
-emulator, press Run.
-
-```bash
-./gradlew :app:assembleDebug       # debug APK
-./gradlew :app:testDebugUnitTest   # local unit tests
+```properties
+supabaseUrl=https://PROJECT_REF.supabase.co
+supabasePublishableKey=sb_publishable_...
+backendUrl=http://10.0.2.2:8080
 ```
 
-## Talking to the API
+Register `magicshroom://auth` as a Supabase Auth redirect URL and enable Google sign-in for the
+project. The debug manifest permits emulator HTTP for local development; deploy the backend over
+HTTPS and set `backendUrl` accordingly for release builds. The publishable key may be in the app;
+the database password and service role key must stay on the backend.
 
-- From the emulator, your computer is `10.0.2.2`, not `localhost`.
-- No backend yet? Run the mock from the repo root: `npx @stoplight/prism-cli mock docs/openapi.yaml`,
-  then point the app at `http://10.0.2.2:4010`.
-- Plain HTTP to `10.0.2.2` needs a network security config. The deployed API must be HTTPS.
-
-## Package layout (`edu.csumb.magicshroom`)
-
-Add these packages as you need them:
-
-| Package | Holds |
-|---|---|
-| `data/api/` | Retrofit service interface and DTOs matching `docs/openapi.yaml` |
-| `data/auth/` | Authorization Code + PKCE login (AppAuth), token storage |
-| `data/repository/` | Wraps the API for ViewModels; maps HTTP errors (401/403/404/500) |
-| `ui/login/`, `ui/list/`, `ui/detail/`, `ui/admin/` | One package per screen: `Screen` + `ViewModel` |
-| `ui/nav/` | `AppNavHost` |
-| `ui/theme/` | Compose theme |
+Build with `./gradlew :app:assembleDebug`. The app currently presents one screen with card search,
+card detail, Google sign-in, deck creation, and add/remove actions.
