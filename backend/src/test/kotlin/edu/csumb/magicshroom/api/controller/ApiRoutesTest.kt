@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 
 /**
- * Exercises the routes end to end against the mock JSON data (see src/main/resources/mock-data).
+ * Exercises the routes end to end against the mock JSON data in src/test/resources/mock-data.
  * Tests that change data reset the application context afterwards so they cannot affect each other.
  */
 @SpringBootTest
