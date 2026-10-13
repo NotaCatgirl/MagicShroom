@@ -18,6 +18,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val backendUrl = providers.gradleProperty("backendUrl").orElse("http://10.0.2.2:8080").get()
+        val supabaseUrl = providers.gradleProperty("supabaseUrl").orElse("https://example.supabase.co").get()
+        val supabaseKey = providers.gradleProperty("supabasePublishableKey").orElse("sb_publishable_replace_me").get()
+        buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"$supabaseKey\"")
     }
 
     buildTypes {
@@ -34,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -54,6 +61,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(platform("io.github.jan-tennert.supabase:bom:3.5.0"))
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.ktor:ktor-client-android:3.0.3")
 }
