@@ -55,7 +55,7 @@ class SupabaseSecurity(@Value("\${magicshroom.auth.issuer}") private val issuer:
         .build().apply {
             setJwtValidator { token ->
                 val standard = JwtValidators.createDefaultWithIssuer(issuer).validate(token)
-                if (standard.hasErrors()) standard else if ("authenticated" !in token.audience || token.getClaimAsString("role") != "authenticated") {
+                if (standard.hasErrors()) standard else if (token.audience?.contains("authenticated") != true || token.getClaimAsString("role") != "authenticated") {
                     org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.failure(
                         org.springframework.security.oauth2.core.OAuth2Error("invalid_token", "Invalid audience", null))
                 } else org.springframework.security.oauth2.core.OAuth2TokenValidatorResult.success()
