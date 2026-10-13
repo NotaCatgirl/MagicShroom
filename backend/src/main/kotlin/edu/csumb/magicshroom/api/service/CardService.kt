@@ -12,10 +12,12 @@ import edu.csumb.magicshroom.api.model.Color
 import edu.csumb.magicshroom.api.repository.CardRepository
 import edu.csumb.magicshroom.api.repository.DeckCardRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 /** Browsing the public card catalog, and admin-only changes to it. */
 @Service
+@Transactional
 class CardService(
 	private val cardRepository: CardRepository,
 	private val deckCardRepository: DeckCardRepository,
@@ -25,11 +27,7 @@ class CardService(
 	 * [color], in [sort] order. Either filter may be null to skip it.
 	 */
 	fun list(name: String?, color: Color?, sort: CardSort, page: Int, size: Int): PageResponse<Card> {
-		val matches = cardRepository.findAll()
-			.filter { name == null || it.cardName.contains(name.trim(), ignoreCase = true) }
-			.filter { color == null || it.hasColorIdentity(color) }
-			.sortedWith(sort.comparator)
-		return PageResponse.of(matches, page, size)
+		return cardRepository.search(name, color, sort, page, size)
 	}
 
 	/** The card with [cardId]; 404 if there is none. */

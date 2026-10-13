@@ -16,12 +16,14 @@ import edu.csumb.magicshroom.api.repository.CardRepository
 import edu.csumb.magicshroom.api.repository.DeckCardRepository
 import edu.csumb.magicshroom.api.repository.DeckRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * The signed-in user's decks and the cards in them. A deck that belongs to someone else is
  * reported as 404, never 403, so callers cannot discover which deck ids exist.
  */
 @Service
+@Transactional
 class DeckService(
 	private val deckRepository: DeckRepository,
 	private val deckCardRepository: DeckCardRepository,

@@ -6,9 +6,11 @@ import edu.csumb.magicshroom.api.repository.DeckCardRepository
 import edu.csumb.magicshroom.api.repository.DeckRepository
 import edu.csumb.magicshroom.api.repository.UserRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 /** Admin management of user accounts. */
 @Service
+@Transactional
 class UserService(
 	private val userRepository: UserRepository,
 	private val deckRepository: DeckRepository,
