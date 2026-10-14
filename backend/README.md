@@ -29,11 +29,13 @@ The stub accepts `X-Stub-User-Id` only in the mock profile. It is never enabled 
 
 ## Schema and archive
 
-Flyway applies `V1__application_schema.sql` on startup. It drops the old disposable `public.users`,
-`cards`, `decks`, and `deck_cards` tables, creates typed application tables, and leaves `auth.users`
-alone. Application users retain numeric API IDs and link to Supabase Auth through a UUID. The
-tables deny direct `anon` and `authenticated` access; the backend uses a server-side database
-connection.
+Flyway applies `V1__application_schema.sql` and `V2__required_value_constraints.sql` on startup.
+V1 drops the old disposable `public.users`, `cards`, `decks`, and `deck_cards` tables, creates
+typed application tables, and leaves `auth.users` alone. V2 rejects blank user/card/deck names
+and JSONB card details that are not arrays. Required identity, name, list, and detail columns
+are `NOT NULL`; genuinely optional card values such as mana cost and rules text remain nullable.
+Application users retain numeric API IDs and link to Supabase Auth through a UUID. The tables
+deny direct `anon` and `authenticated` access; the backend uses a server-side database connection.
 
 Follow [`../docs/supabase-deployment.md`](../docs/supabase-deployment.md) to measure the complete
 temporary PostgreSQL database before the one-time `archive/AllCards.json` import. An import above
