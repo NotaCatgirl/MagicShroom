@@ -38,3 +38,7 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Env ###
+.env
+.secret
