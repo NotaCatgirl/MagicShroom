@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
+// TODO(contract): the prompt also requires admin GET /users, GET /users/{userId}, PATCH /users/{userId}
+//  (grant/revoke admin), and self-service account deletion. Add them to docs/openapi.yaml first.
 /** `/api/v1/users`: admin-only account management. */
 @RestController
 @RequestMapping("/api/v1/users")

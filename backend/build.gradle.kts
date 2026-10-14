@@ -19,6 +19,8 @@ repositories {
 }
 
 dependencies {
+	// TODO(db): h2console puts H2 on the runtime classpath, so with no datasource URL bootRun silently
+	//  uses in-memory H2. Also pick one of data-jdbc / data-jpa rather than shipping both.
 	implementation("org.springframework.boot:spring-boot-h2console")
 	implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")

@@ -7,6 +7,7 @@ data class MockUser(
     val role: String,
 )
 
+// TODO(auth): delete once PKCE sign-in works, along with the "Mock account" hint on LoginScreen.
 /**
  * Temporary local authentication used until OAuth2 Authorization Code with PKCE is implemented.
  *

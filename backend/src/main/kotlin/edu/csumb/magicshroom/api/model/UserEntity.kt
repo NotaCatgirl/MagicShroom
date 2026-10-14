@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 
+// TODO(db): add a role column; the admin role must be stored in the database. Then implement the
+//  UserRepository interface with JpaUserRepository so the services use it (they use the mock today).
 @Entity
 @Table(name = "users")
 open class UserEntity(
