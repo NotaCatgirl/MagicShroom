@@ -1,33 +1,63 @@
 package edu.csumb.magicshroom.ui.search
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.csumb.magicshroom.data.api.CardDto
-import edu.csumb.magicshroom.data.api.Color
+import edu.csumb.magicshroom.ui.theme.AppBackground
+import edu.csumb.magicshroom.ui.theme.BorderLavender
+import edu.csumb.magicshroom.ui.theme.BrandPurple
+import edu.csumb.magicshroom.ui.theme.LavenderSurface
 import edu.csumb.magicshroom.ui.theme.MagicShroomTheme
 
 /** Stable identifiers used by the search Compose UI test. */
@@ -36,48 +66,83 @@ object SearchTestTags {
     const val ACCOUNT = "search_account"
     const val FIELD = "search_field"
     const val RESULTS = "search_results"
+    const val LOAD_MORE = "search_load_more"
+    const val RETRY = "search_retry"
 }
 
-/** Card search backed by the live API, plus the account navigation action. */
+/** Searches the public card catalog and displays the results without a card detail page. */
 @Composable
 fun SearchScreen(
     onAccountClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
+    canAccessBackend: Boolean = true,
+    onRequestLocalNetworkPermission: () -> Unit = {},
 ) {
-    val state by viewModel.uiState.collectAsState()
-    SearchContent(
-        query = viewModel.query,
-        state = state,
-        onQueryChange = viewModel::onQueryChange,
-        onRetry = viewModel::retry,
-        onAccountClick = onAccountClick,
-        modifier = modifier,
-    )
+    if (canAccessBackend) {
+        val viewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory)
+        val state by viewModel.uiState.collectAsState()
+        SearchContent(
+            query = viewModel.query,
+            state = state,
+            onQueryChange = viewModel::onQueryChange,
+            onSearchNow = viewModel::retry,
+            onRetry = viewModel::retry,
+            onLoadMore = viewModel::loadMore,
+            onAccountClick = onAccountClick,
+            modifier = modifier,
+        )
+    } else {
+        SearchContent(
+            query = "",
+            state = SearchUiState(isLoading = false),
+            onQueryChange = {},
+            onSearchNow = {},
+            onRetry = {},
+            onLoadMore = {},
+            onAccountClick = onAccountClick,
+            modifier = modifier,
+            needsLocalNetworkPermission = true,
+            onRequestLocalNetworkPermission = onRequestLocalNetworkPermission,
+        )
+    }
 }
 
-/** Stateless search UI, so it can be previewed and tested without a server. */
+/** Stateless search content, kept separate from the network request for previews and UI tests. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchContent(
     query: String,
     state: SearchUiState,
     onQueryChange: (String) -> Unit,
+    onSearchNow: () -> Unit,
     onRetry: () -> Unit,
+    onLoadMore: () -> Unit,
     onAccountClick: () -> Unit,
     modifier: Modifier = Modifier,
+    needsLocalNetworkPermission: Boolean = false,
+    onRequestLocalNetworkPermission: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier.testTag(SearchTestTags.SCREEN),
+        containerColor = AppBackground,
         topBar = {
             TopAppBar(
-                title = { Text("Search cards") },
+                title = { Text(text = "Search cards", fontSize = 26.sp) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
                 actions = {
-                    TextButton(
-                        onClick = onAccountClick,
-                        modifier = Modifier.testTag(SearchTestTags.ACCOUNT),
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 18.dp)
+                            .size(48.dp)
+                            .semantics { contentDescription = "Account" }
+                            .testTag(SearchTestTags.ACCOUNT)
+                            .clickable(role = Role.Button, onClick = onAccountClick),
+                        contentAlignment = Alignment.Center,
                     ) {
-                        Text("Account")
+                        AccountOutlineIcon(
+                            modifier = Modifier.size(27.dp),
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
                     }
                 },
             )
@@ -87,26 +152,107 @@ fun SearchContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 24.dp)
+                .padding(top = 28.dp),
         ) {
             OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChange,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(62.dp)
                     .testTag(SearchTestTags.FIELD),
-                label = { Text("Search cards") },
-                placeholder = { Text("Card name") },
+                enabled = !needsLocalNetworkPermission,
                 singleLine = true,
+                shape = RoundedCornerShape(32.dp),
+                placeholder = { Text("Search cards") },
+                leadingIcon = {
+                    SearchOutlineIcon(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                },
+                trailingIcon = if (query.isNotEmpty()) {
+                    {
+                        IconButton(onClick = { onQueryChange("") }) {
+                            Text("×", modifier = Modifier.semantics { contentDescription = "Clear search" }, fontSize = 24.sp)
+                        }
+                    }
+                } else null,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { onSearchNow() }),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = LavenderSurface,
+                    unfocusedContainerColor = LavenderSurface,
+                    disabledContainerColor = LavenderSurface,
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    disabledBorderColor = Color.Transparent,
+                ),
             )
 
-            if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-
-            val error = state.errorMessage
-            when {
-                error != null -> SearchError(message = error, onRetry = onRetry)
-                !state.isLoading -> SearchResults(query = query, state = state)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag(SearchTestTags.RESULTS),
+                contentPadding = PaddingValues(top = 26.dp, bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                when {
+                    needsLocalNetworkPermission -> item {
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            Text(
+                                "Allow local network access to search cards on the emulator. " +
+                                    "If you denied it before, enable it in MagicShroom's app permissions.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Button(onClick = onRequestLocalNetworkPermission) {
+                                Text("Allow local connection")
+                            }
+                        }
+                    }
+                    state.isLoading -> items(2) { SearchResultPlaceholder() }
+                    state.errorMessage != null -> item {
+                        SearchError(message = state.errorMessage, onRetry = onRetry)
+                    }
+                    state.cards.isEmpty() -> item {
+                        Text(
+                            text = if (query.isBlank()) "No cards are available yet."
+                            else "No cards match \"${query.trim()}\".",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    else -> {
+                        item {
+                            Text(
+                                "Showing ${state.cards.size} of ${state.totalCards} cards",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                        items(state.cards, key = { it.id }) { card ->
+                            SearchResultRow(card)
+                        }
+                        if (state.isLoadingMore) item {
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = BrandPurple)
+                            }
+                        }
+                        if (state.loadMoreErrorMessage != null) item {
+                            SearchError(message = state.loadMoreErrorMessage, onRetry = onLoadMore)
+                        }
+                        if (state.hasMore && !state.isLoadingMore && state.loadMoreErrorMessage == null) item {
+                            OutlinedButton(
+                                onClick = onLoadMore,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag(SearchTestTags.LOAD_MORE),
+                            ) {
+                                Text("Load more")
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -115,53 +261,172 @@ fun SearchContent(
 @Composable
 private fun SearchError(message: String, onRetry: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(text = message, color = MaterialTheme.colorScheme.error)
-        Button(onClick = onRetry) { Text("Retry") }
+        Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Button(onClick = onRetry, modifier = Modifier.testTag(SearchTestTags.RETRY)) {
+            Text("Retry")
+        }
     }
 }
 
 @Composable
-private fun SearchResults(query: String, state: SearchUiState) {
-    Text(
-        text = if (state.cards.isEmpty()) {
-            "No cards match \"${query.trim()}\"."
-        } else {
-            "Showing ${state.cards.size} of ${state.totalCards} cards"
-        },
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        style = MaterialTheme.typography.labelLarge,
-    )
-    // TODO(ui): tapping a card should open the Detail screen (GET /api/v1/cards/{cardId}).
-    LazyColumn(modifier = Modifier.testTag(SearchTestTags.RESULTS)) {
-        items(state.cards, key = { it.id }) { card ->
-            ListItem(
-                headlineContent = { Text(card.cardName) },
-                supportingContent = { Text((card.supertypes + card.types).joinToString(" ")) },
-                trailingContent = card.manaCost?.let { cost -> { Text(cost) } },
+private fun SearchResultRow(card: CardDto) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 104.dp)
+            .background(Color.White, RoundedCornerShape(17.dp))
+            .border(1.dp, BorderLavender, RoundedCornerShape(17.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 56.dp, height = 72.dp)
+                .background(
+                    Brush.verticalGradient(listOf(BrandPurple, BrandPurple.copy(alpha = 0.45f))),
+                    RoundedCornerShape(10.dp),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = card.cardName.firstOrNull()?.uppercaseChar()?.toString().orEmpty(),
+                color = Color.White,
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Medium,
             )
-            HorizontalDivider()
         }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text(
+                text = card.cardName,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val type = (card.supertypes + card.types).joinToString(" ")
+            val subtype = card.subtypes.joinToString(" ")
+            Text(
+                text = listOf(type, subtype).filter(String::isNotBlank).joinToString(" • ").ifEmpty { "Card" },
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        card.manaCost?.takeIf(String::isNotBlank)?.let { cost ->
+            Text(
+                text = cost,
+                color = BrandPurple,
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchResultPlaceholder() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(104.dp)
+            .background(Color.White, RoundedCornerShape(17.dp))
+            .border(1.dp, BorderLavender, RoundedCornerShape(17.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 56.dp, height = 72.dp)
+                .background(LavenderSurface, RoundedCornerShape(10.dp)),
+        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(12.dp)
+                    .background(LavenderSurface, RoundedCornerShape(8.dp)),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.58f)
+                    .height(12.dp)
+                    .background(LavenderSurface, RoundedCornerShape(8.dp)),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchOutlineIcon(modifier: Modifier, color: Color) {
+    Canvas(modifier = modifier) {
+        val stroke = Stroke(width = 2.dp.toPx())
+        drawCircle(
+            color = color,
+            radius = size.minDimension * 0.32f,
+            center = Offset(size.width * 0.43f, size.height * 0.43f),
+            style = stroke,
+        )
+        drawLine(
+            color = color,
+            start = Offset(size.width * 0.66f, size.height * 0.66f),
+            end = Offset(size.width * 0.9f, size.height * 0.9f),
+            strokeWidth = 2.dp.toPx(),
+        )
+    }
+}
+
+@Composable
+private fun AccountOutlineIcon(modifier: Modifier, color: Color) {
+    Canvas(modifier = modifier) {
+        val strokeWidth = 2.dp.toPx()
+        drawCircle(
+            color = color,
+            radius = size.minDimension * 0.42f,
+            style = Stroke(strokeWidth),
+        )
+        drawCircle(
+            color = color,
+            radius = size.minDimension * 0.13f,
+            center = Offset(size.width / 2f, size.height * 0.38f),
+            style = Stroke(strokeWidth),
+        )
+        drawArc(
+            color = color,
+            startAngle = 200f,
+            sweepAngle = 140f,
+            useCenter = false,
+            topLeft = Offset(size.width * 0.27f, size.height * 0.48f),
+            size = Size(size.width * 0.46f, size.height * 0.34f),
+            style = Stroke(strokeWidth),
+        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun SearchScreenPreview() {
-    val bolt = CardDto(
-        id = 1,
-        uuid = "0318d56b-647f-4b0f-9306-9adc3312619d",
-        cardName = "Lightning Bolt",
-        colorIdentity = listOf(Color.R),
-        colors = listOf(Color.R),
-        manaCost = "{R}",
-        types = listOf("Instant"),
-    )
     MagicShroomTheme {
         SearchContent(
             query = "bolt",
-            state = SearchUiState(cards = listOf(bolt), totalCards = 1, isLoading = false),
+            state = SearchUiState(
+                cards = listOf(
+                    CardDto(
+                        id = 1,
+                        uuid = "0318d56b-647f-4b0f-9306-9adc3312619d",
+                        cardName = "Lightning Bolt",
+                        manaCost = "{R}",
+                        types = listOf("Instant"),
+                    ),
+                ),
+                totalCards = 1,
+                isLoading = false,
+            ),
             onQueryChange = {},
+            onSearchNow = {},
             onRetry = {},
+            onLoadMore = {},
             onAccountClick = {},
         )
     }

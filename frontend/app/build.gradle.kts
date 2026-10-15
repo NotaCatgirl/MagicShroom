@@ -28,10 +28,7 @@ android {
 
     buildTypes {
         debug {
-            // Keep the optional Retrofit prototype pointed at the same API as the active screen.
             buildConfigField("String", "API_BASE_URL", "\"${backendUrl.trimEnd('/')}/\"")
-            // The prototype uses this only when run against the isolated mock backend profile.
-            buildConfigField("String", "STUB_USER_ID", "\"2\"")
         }
         release {
             optimization {
@@ -39,7 +36,6 @@ android {
             }
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"${backendUrl.trimEnd('/')}/\"")
-            buildConfigField("String", "STUB_USER_ID", "\"\"")
         }
     }
     compileOptions {
