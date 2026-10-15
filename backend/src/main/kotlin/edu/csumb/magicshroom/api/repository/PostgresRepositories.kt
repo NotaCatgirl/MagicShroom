@@ -130,6 +130,28 @@ class PostgresUserRepository(private val jdbc: JdbcTemplate) : UserRepository {
     /** Finds a user by the API's numeric id. */
     override fun findById(id: Long): User? = jdbc.query("select id, email, display_name, role from app_users where id = ?", mapper, id).firstOrNull()
 
+    /** Pages users in id order in PostgreSQL, optionally filtered by role. */
+    override fun findPage(role: Role?, page: Int, size: Int): PageResponse<User> {
+        val where = if (role == null) "" else " where role = ?"
+        val args: List<Any> = listOfNotNull(role?.name)
+        val total = jdbc.queryForObject("select count(*) from app_users$where", Long::class.java, *args.toTypedArray()) ?: 0L
+        val rows = jdbc.query("select id, email, display_name, role from app_users$where order by id limit ? offset ?", mapper,
+            *(args + listOf(size, page.toLong() * size)).toTypedArray())
+        return PageResponse(rows, PageMeta(size, page, total, ((total + size - 1) / size).toInt()))
+    }
+
+    /** Counts users with one role, e.g. to keep at least one admin. */
+    override fun countByRole(role: Role): Long =
+        jdbc.queryForObject("select count(*) from app_users where role = ?", Long::class.java, role.name) ?: 0L
+
+    /** Changes a user's role and returns the updated row. */
+    override fun updateRole(id: Long, role: Role): User? =
+        jdbc.query("update app_users set role = ? where id = ? returning id, email, display_name, role", mapper, role.name, id).firstOrNull()
+
+    /** Returns the Supabase Auth subject linked to an application user. */
+    override fun findAuthUserId(id: Long): UUID? =
+        jdbc.query("select auth_user_id from app_users where id = ?", { rs, _ -> rs.getObject("auth_user_id", UUID::class.java) }, id).firstOrNull()
+
     /** Creates an application account for an Auth subject on first valid request. */
     override fun findOrCreate(authUserId: UUID, email: String, displayName: String): User =
         jdbc.query("""insert into app_users (auth_user_id, email, display_name) values (?, ?, ?)
