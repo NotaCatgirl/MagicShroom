@@ -1,29 +1,23 @@
 # MagicShroom Android app
 
-The Compose app browses public cards and lets a Google signed-in user create a personal deck,
-add cards, and remove them. Supabase Auth handles OAuth and the session; the app calls the
-MagicShroom backend with the Supabase access token. It does not connect to PostgreSQL.
+The current Compose app opens a demo login, then a searchable card list and a read-only account
+screen. Sign in with `testEmail1@gmail.com` and `password1`. The demo account is local to the app;
+search uses the backend's public `GET /api/v1/cards` endpoint, so the Android app does not need
+Supabase credentials for this flow. Configure the backend separately as described in its README.
+Card details and deck actions are not connected to this screen yet.
 
-Open this folder in Android Studio and set Gradle properties locally:
+Open `frontend/` in Android Studio and run the app. The debug build defaults to
+`http://10.0.2.2:8080`, which reaches a backend running on your computer from the Android
+emulator. Start a backend with card data using the instructions in [`backend/README.md`](../backend/README.md),
+or set another backend URL in your local Gradle properties:
 
 ```properties
-supabaseUrl=https://PROJECT_REF.supabase.co
-supabasePublishableKey=sb_publishable_...
-backendUrl=http://10.0.2.2:8080
+backendUrl=https://YOUR_BACKEND_HOST
 ```
 
-Register `magicshroom://auth` as a Supabase Auth redirect URL and enable Google sign-in for the
-project. On Android 17 (API 37), the debug app requests Nearby devices access before connecting
-to the emulator-host address `10.0.2.2`; allow it to browse the local API. This permission is not
-included in release builds or requested for a remote backend. The debug manifest also permits
-emulator HTTP for local development; deploy the backend over HTTPS and set `backendUrl` accordingly
-for release builds. The publishable key may be in the app;
-the database password and service role key must stay on the backend.
+On the Android 17 (API 37) emulator, allow local-network access when the search screen asks for
+it. This permission is only requested for a debug build using `10.0.2.2`. If the backend is
+unavailable, search shows an error with a Retry button.
 
-Build with `./gradlew :app:assembleDebug`. The app currently presents one screen with card search,
-card detail, Google sign-in, deck creation, and add/remove actions.
-
-The merged `data/` and `ui/` packages also contain a separate Retrofit-backed navigation
-prototype with mock login. Its `AppNavHost` is exercised by `AppFlowTest`, but it is not the
-activity's entry point. Do not use its stub-user header for production requests; the active
-screen uses Supabase Auth bearer tokens through `ApiClient`.
+Build from this directory with `./gradlew :app:assembleDebug`. Supabase OAuth setup remains in
+the project for a later authentication milestone; the current demo login does not use it.
