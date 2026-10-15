@@ -7,6 +7,7 @@ the Android client uses Jetpack Compose and Supabase Auth for Google sign-in.
 - [`frontend/README.md`](frontend/README.md): Android build and sign-in setup.
 - [`docs/supabase-deployment.md`](docs/supabase-deployment.md): PostgreSQL size measurement,
   versioned schema, and one-time archive import.
+- [`docs/render-deployment.md`](docs/render-deployment.md): Docker service setup and verification.
 - [`docs/openapi.yaml`](docs/openapi.yaml): API contract.
 
 The unchanged 2019 card archive is at `../archive/AllCards.json`. The API maps its compact

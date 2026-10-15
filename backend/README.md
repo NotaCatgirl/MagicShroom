@@ -46,4 +46,5 @@ complete `foreignData` payload in JSONB while returning the existing card API sh
 
 `docker build -t magicshroom-api .` builds a production JAR in a JDK 25 stage and runs it from a
 JRE 25 image. The image exposes `/actuator/health`; pass database and Supabase settings as runtime
-environment variables.
+environment variables. The server uses `PORT` when supplied (default `8080`). For Render setup,
+see [`../docs/render-deployment.md`](../docs/render-deployment.md).
