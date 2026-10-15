@@ -1,82 +1,15 @@
-# CST 438 Project 02: API Template
+# MagicShroom
 
-Starter repo for Project 02. **One person per team** clicks **Use this template → Create a new
-repository**, names it after your API, and adds teammates as collaborators.
+MagicShroom is a card catalog and personal deck app. The backend is a Kotlin/Spring Boot API;
+the Android client uses Jetpack Compose and Supabase Auth for Google sign-in.
 
-> Replace this README with your own in Sprint 4. The prompt lists what it must contain.
+- [`backend/README.md`](backend/README.md): API configuration, profiles, tests, and Docker.
+- [`frontend/README.md`](frontend/README.md): Android build and sign-in setup.
+- [`docs/supabase-deployment.md`](docs/supabase-deployment.md): PostgreSQL size measurement,
+  versioned schema, and one-time archive import.
+- [`docs/render-deployment.md`](docs/render-deployment.md): Docker service setup and verification.
+- [`docs/openapi.yaml`](docs/openapi.yaml): API contract.
 
-## What's in here
-
-| Path | What it is | When |
-|---|---|---|
-| `docs/proposal.md` | Proposal template: pitch, resources, ER sketch, endpoints, choices, risks | **Thu 10/1** |
-| `docs/openapi.yaml` | A complete example contract (workout tracker). Replace it with your API. | Sprint 1 |
-| `redocly.yaml` | Lint rules for the contract | Sprint 1 |
-| `.github/ISSUE_TEMPLATE/user_story.md` | Every new issue starts as a user story with acceptance criteria | now |
-| `.github/pull_request_template.md` | Every PR starts with `Closes #` and a test checklist | now |
-| `.gitignore` | Gradle, Android, IntelliJ, Node, and **secrets** (`.env`, keystores, `local.properties`) | now |
-
-## Repository layout
-
-Monorepo with two **independent** Gradle builds. There is no build at the repo root: open and run
-each side from its own folder.
-
-| Path | What it is | Open with |
-|---|---|---|
-| `backend/` | Spring Boot + Kotlin API ([README](backend/README.md)) | IntelliJ IDEA → open `backend/` |
-| `frontend/` | Kotlin Android app, Jetpack Compose ([README](frontend/README.md)) | Android Studio → open `frontend/` |
-| `docs/` | Contract, proposal, diagrams, ADRs (`docs/adr/`), retros (`docs/retros/`) | |
-| `.github/` | Issue and PR templates, CI for each side | |
-
-Why two builds instead of one: the backend's Docker image builds from `backend/` alone without
-needing the Android SDK, the two sides never fight over Kotlin/Gradle plugin versions, and each
-gets its own CI job. (Candidate for ADR 0001.)
-
-## First 15 minutes
-
-- [ ] Add teammates: **Settings → Collaborators**
-- [ ] Protect `main`: **Settings → Rules → Rulesets → New branch ruleset**. Target the default branch,
-      require a PR with **2 approvals** (1 for a team of 3), block force pushes. Enforcement: **Active**.
-- [ ] Create milestones `Sprint 1` through `Sprint 4`: **Issues → Milestones**
-- [ ] Create a Project board (Kanban) and link it: **Projects tab → Link a project**
-- [ ] Start `docs/proposal.md` on a branch:
-
-```bash
-git switch -c docs/proposal
-# edit docs/proposal.md
-git add docs/proposal.md
-git commit -m "Draft proposal"
-git push -u origin docs/proposal
-gh pr create --fill
-```
-
-## Working with the contract
-
-No installs needed beyond Node (`npx` runs the tools).
-
-```bash
-# Lint: fix every error before you open a PR
-npx @redocly/cli lint docs/openapi.yaml
-
-# Mock server: a fake API built from the contract, at http://127.0.0.1:4010
-npx @stoplight/prism-cli mock docs/openapi.yaml
-
-curl -H "Authorization: Bearer x" "http://127.0.0.1:4010/api/v1/workouts?page=0&size=20"
-curl -i http://127.0.0.1:4010/api/v1/workouts          # 401: no token
-curl -H "Authorization: Bearer x" -H "Prefer: code=404" \
-     http://127.0.0.1:4010/api/v1/workouts/42          # force an error response
-```
-
-The mock **validates** your requests and returns the `example:` values from the contract.
-**Nothing is saved**: a POST followed by a GET returns the example, not what you posted. The
-Android emulator reaches it at `http://10.0.2.2:4010`.
-
-To see the contract rendered, paste `docs/openapi.yaml` into https://editor.swagger.io.
-
-## Links
-
-- Project 02 prompt and rubric: Canvas → Project 02 module
-- OpenAPI 3.0 spec: https://spec.openapis.org/oas/v3.0.3
-- Prism: https://docs.stoplight.io/docs/prism
-- Mermaid ER diagrams: https://mermaid.js.org/syntax/entityRelationshipDiagram.html
-- RFC 9457 Problem Details: https://www.rfc-editor.org/rfc/rfc9457
+The unchanged 2019 card archive is at `../archive/AllCards.json`. The API maps its compact
+PostgreSQL storage to the existing card response shape. Database credentials stay on the server;
+the app only holds a Supabase publishable key and a user's access token.

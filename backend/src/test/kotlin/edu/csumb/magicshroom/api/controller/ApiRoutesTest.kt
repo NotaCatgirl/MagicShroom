@@ -12,7 +12,7 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 
 /**
- * Exercises the routes end to end against the mock JSON data (see src/main/resources/mock-data).
+ * Exercises the routes end to end against the mock JSON data in src/test/resources/mock-data.
  * Tests that change data reset the application context afterwards so they cannot affect each other.
  */
 @SpringBootTest
@@ -22,13 +22,51 @@ class ApiRoutesTest(@Autowired private val mockMvc: MockMvc) {
 	private val admin = "1"
 	private val playerTwo = "3"
 
+	/** Reports a healthy API for the container and Render health checks. */
+	@Test
+	fun `health endpoint reports up`() {
+		mockMvc.get("/actuator/health").andExpect {
+			status { isOk() }
+			jsonPath("$.status") { value("UP") }
+		}
+	}
+
 	@Test
 	fun `lists the first page of cards with paging info`() {
 		mockMvc.get("/api/v1/cards").andExpect {
 			status { isOk() }
 			jsonPath("$.content.length()") { value(20) }
+			jsonPath("$.content[0].id") { isNumber() }
+			jsonPath("$.content[0].cardName") { isString() }
 			jsonPath("$.page.totalElements") { value(22) }
 			jsonPath("$.page.totalPages") { value(2) }
+		}
+	}
+
+	/** Supplies the second home-screen page without repeating the first twenty cards. */
+	@Test
+	fun `lists the second page of cards`() {
+		mockMvc.get("/api/v1/cards?page=1&size=20").andExpect {
+			status { isOk() }
+			jsonPath("$.content.length()") { value(2) }
+			jsonPath("$.page.number") { value(1) }
+			jsonPath("$.page.totalElements") { value(22) }
+		}
+	}
+
+	/** Returns the name, mana cost, and text shown when a home-screen card is selected. */
+	@Test
+	fun `card detail contains home-screen fields and structured metadata`() {
+		mockMvc.get("/api/v1/cards/1").andExpect {
+			status { isOk() }
+			jsonPath("$.id") { value(1) }
+			jsonPath("$.cardName") { value("Lightning Bolt") }
+			jsonPath("$.manaCost") { value("{R}") }
+			jsonPath("$.text") { value("Lightning Bolt deals 3 damage to any target.") }
+			jsonPath("$.colorIdentity[0]") { value("R") }
+			jsonPath("$.foreignData[0].name") { value("Relámpago") }
+			jsonPath("$.legalities[0].format") { value("modern") }
+			jsonPath("$.purchaseUrls[0].vendor") { value("example") }
 		}
 	}
 
@@ -39,6 +77,36 @@ class ApiRoutesTest(@Autowired private val mockMvc: MockMvc) {
 			jsonPath("$.content.length()") { value(1) }
 			jsonPath("$.content[0].cardName") { value("Lightning Helix") }
 		}
+	}
+
+	/** Returns an empty list, rather than an error, for a search with no matches. */
+	@Test
+	fun `unmatched card search returns an empty page`() {
+		mockMvc.get("/api/v1/cards?name=not-a-real-card-name").andExpect {
+			status { isOk() }
+			jsonPath("$.content.length()") { value(0) }
+			jsonPath("$.page.totalElements") { value(0) }
+		}
+	}
+
+	/** Lists only the current user's decks for the signed-in home-screen section. */
+	@Test
+	fun `lists only the current users decks`() {
+		mockMvc.get("/api/v1/decks").andExpect {
+			status { isOk() }
+			jsonPath("$.length()") { value(2) }
+			jsonPath("$[0].name") { value("Mono Red Burn") }
+			jsonPath("$[0].cards[0].cardId") { value(1) }
+			jsonPath("$[0].cards[0].quantity") { value(4) }
+			jsonPath("$[0].cards[0].section") { value("MAINBOARD") }
+		}
+	}
+
+	/** Rejects an unknown test caller on the personal-decks route. */
+	@Test
+	fun `unknown caller cannot list decks`() {
+		mockMvc.get("/api/v1/decks") { header("X-Stub-User-Id", "999") }
+			.andExpect { status { isUnauthorized() } }
 	}
 
 	@Test

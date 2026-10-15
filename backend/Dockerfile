@@ -1,7 +1,14 @@
-# TODO(deploy): Sprint 2 placeholder. What the project prompt requires of this file:
-#   - Multi-stage: stage 1 runs ./gradlew bootJar; stage 2 copies ONLY the jar
-#     into a slim JRE 25 image (no Gradle toolchain, no source tree).
-#   - A HEALTHCHECK, or expose /actuator/health for the host to poll.
-#   - No secrets. DB URL, passwords, and OAuth settings come from environment
-#     variables at runtime (host config locally, GitHub Actions secrets in CI).
-# Build from this folder:  docker build -t magicshroom-api .
+FROM eclipse-temurin:25-jdk AS build
+WORKDIR /app
+COPY gradlew settings.gradle.kts build.gradle.kts ./
+COPY gradle ./gradle
+COPY src ./src
+RUN chmod +x gradlew && ./gradlew --no-daemon bootJar
+
+FROM eclipse-temurin:25-jre-alpine
+WORKDIR /app
+COPY --from=build /app/build/libs/*.jar /app/api.jar
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s \
+  CMD wget -q -O /dev/null "http://127.0.0.1:${PORT:-8080}/actuator/health" || exit 1
+ENTRYPOINT ["java", "-jar", "/app/api.jar"]

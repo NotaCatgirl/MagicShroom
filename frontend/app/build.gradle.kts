@@ -5,6 +5,7 @@ plugins {
 }
 
 android {
+    val backendUrl = providers.gradleProperty("backendUrl").orElse("http://10.0.2.2:8080").get()
     namespace = "edu.csumb.magicshroom"
     compileSdk {
         version = release(37)
@@ -18,13 +19,18 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val supabaseUrl = providers.gradleProperty("supabaseUrl").orElse("https://example.supabase.co").get()
+        val supabaseKey = providers.gradleProperty("supabasePublishableKey").orElse("sb_publishable_replace_me").get()
+        buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"$supabaseKey\"")
     }
 
     buildTypes {
         debug {
-            // The emulator reaches your computer's localhost at 10.0.2.2 (backend: ./gradlew bootRun).
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/\"")
-            // Sent as X-Stub-User-Id until OAuth2 sign-in exists: 2 = regular user, 1 = admin.
+            // Keep the optional Retrofit prototype pointed at the same API as the active screen.
+            buildConfigField("String", "API_BASE_URL", "\"${backendUrl.trimEnd('/')}/\"")
+            // The prototype uses this only when run against the isolated mock backend profile.
             buildConfigField("String", "STUB_USER_ID", "\"2\"")
         }
         release {
@@ -32,8 +38,7 @@ android {
                 enable = false
             }
             isMinifyEnabled = false
-            // TODO(deploy): replace with the deployed HTTPS API URL (Sprint 3).
-            buildConfigField("String", "API_BASE_URL", "\"https://your-api.example.com/\"")
+            buildConfigField("String", "API_BASE_URL", "\"${backendUrl.trimEnd('/')}/\"")
             buildConfigField("String", "STUB_USER_ID", "\"\"")
         }
     }
@@ -71,9 +76,8 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    // TODO(db): unused so far. The app should reach data through our API (Android -> Spring -> DB),
-    //  not Supabase directly, which would also ship database keys inside the APK. Remove if agreed.
+    // Supabase Auth supplies bearer tokens; card and deck data still go through our backend API.
     implementation(platform("io.github.jan-tennert.supabase:bom:3.5.0"))
-    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.ktor:ktor-client-android:3.0.3")
 }

@@ -19,8 +19,6 @@ class MagicShroomApplication {
             }
 
             check(result == 1) { "SELECT 1 returned $result" }
-            // TODO(db): this says "Supabase" for any database. Today bootRun connects to in-memory H2
-            //  (see build.gradle.kts), so log the real product/URL from connection.metaData instead.
             logger.info("Supabase database connection successful: SELECT 1 returned 1")
         } catch (exception: Exception) {
             logger.error("Supabase database connection failed", exception)

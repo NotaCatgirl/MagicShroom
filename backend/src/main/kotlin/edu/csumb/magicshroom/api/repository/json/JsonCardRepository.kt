@@ -21,6 +21,7 @@ class JsonCardRepository(jsonMapper: JsonMapper) : CardRepository {
 		lastId = AtomicLong(cards.keys.maxOrNull() ?: 0)
 	}
 
+	/** Returns all mock cards in stable order. */
 	override fun findAll(): List<Card> = cards.values.sortedBy { it.id }
 
 	override fun findById(id: Long): Card? = cards[id]
