@@ -1,10 +1,14 @@
 package edu.csumb.magicshroom
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,6 +42,11 @@ import kotlinx.coroutines.launch
 
 /** Main card browser and personal deck screen. */
 class MainActivity : ComponentActivity() {
+    private var localNetworkGranted by mutableStateOf(false)
+    private val localNetworkPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        localNetworkGranted = it
+    }
+
     private val supabase by lazy {
         createSupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY) {
             install(Auth) { scheme = "magicshroom"; host = "auth" }
@@ -49,14 +58,44 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         supabase.handleDeeplinks(intent)
-        setContent { MagicShroomTheme { MagicShroomScreen(ApiClient(), supabase.auth) } }
+        localNetworkGranted = hasLocalNetworkAccess()
+        setContent {
+            MagicShroomTheme {
+                if (localNetworkGranted) MagicShroomScreen(ApiClient(), supabase.auth)
+                else LocalNetworkPermissionScreen {
+                    localNetworkPermission.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
+                }
+            }
+        }
+        if (!localNetworkGranted) localNetworkPermission.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
     }
+
+    /** Refreshes the local-network grant after returning from Android settings. */
+    override fun onResume() {
+        super.onResume()
+        localNetworkGranted = hasLocalNetworkAccess()
+    }
+
+    /** Checks the runtime permission only when this debug build uses the emulator host. */
+    private fun hasLocalNetworkAccess(): Boolean =
+        !requiresEmulatorNetworkPermission(BuildConfig.BACKEND_URL, Build.VERSION.SDK_INT, BuildConfig.DEBUG) ||
+            checkSelfPermission(Manifest.permission.ACCESS_LOCAL_NETWORK) == PackageManager.PERMISSION_GRANTED
 
     /** Delivers a returning Google OAuth callback to Supabase Auth. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         supabase.handleDeeplinks(intent)
+    }
+}
+
+/** Explains why local browsing is paused until Android allows emulator-host traffic. */
+@Composable
+private fun LocalNetworkPermissionScreen(onRequestPermission: () -> Unit) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Allow Nearby devices access to connect to the local MagicShroom API.")
+        Text("If you denied it before, you can also allow it in Settings > Apps > MagicShroom > Permissions.")
+        Button(onClick = onRequestPermission) { Text("Allow local connection") }
     }
 }
 
