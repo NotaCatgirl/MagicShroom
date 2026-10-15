@@ -158,8 +158,7 @@ private fun MagicShroomScreen(api: ApiClient, auth: Auth) {
                 Button(enabled = cards.size == 20, onClick = { page++; loadCards() }) { Text("Next") }
             }
             selectedCard?.let { card ->
-                Text("${card.name} ${card.manaCost.orEmpty()}")
-                card.text?.let { Text(it) }
+                CardDetails(card)
                 val accessToken = token
                 if (accessToken != null && selectedDeck != null) {
                     Button(onClick = { scope.launch {
@@ -193,12 +192,25 @@ private fun MagicShroomScreen(api: ApiClient, auth: Auth) {
                     }
                 }
             }
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(cards, key = { it.id }) { card ->
-                    Card(modifier = Modifier.fillMaxWidth().clickable { selectedCard = card }) {
-                        Text(card.name, modifier = Modifier.padding(12.dp))
-                    }
-                }
+            CardList(cards) { selectedCard = it }
+        }
+    }
+}
+
+/** Displays the card fields returned by the public API after a card is selected. */
+@Composable
+internal fun CardDetails(card: CardSummary) {
+    Text("${card.name} ${card.manaCost.orEmpty()}")
+    card.text?.let { Text(it) }
+}
+
+/** Displays public API cards in the home-screen list and reports card selection. */
+@Composable
+internal fun CardList(cards: List<CardSummary>, onSelectCard: (CardSummary) -> Unit) {
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        items(cards, key = { it.id }) { card ->
+            Card(modifier = Modifier.fillMaxWidth().clickable { onSelectCard(card) }) {
+                Text(card.name, modifier = Modifier.padding(12.dp))
             }
         }
     }
