@@ -5,6 +5,7 @@ plugins {
 }
 
 android {
+    val backendUrl = providers.gradleProperty("backendUrl").orElse("http://10.0.2.2:8080").get()
     namespace = "edu.csumb.magicshroom"
     compileSdk {
         version = release(37)
@@ -18,7 +19,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val backendUrl = providers.gradleProperty("backendUrl").orElse("http://10.0.2.2:8080").get()
         val supabaseUrl = providers.gradleProperty("supabaseUrl").orElse("https://example.supabase.co").get()
         val supabaseKey = providers.gradleProperty("supabasePublishableKey").orElse("sb_publishable_replace_me").get()
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
