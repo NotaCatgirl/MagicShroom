@@ -97,3 +97,7 @@ data class PageMetaDto(val size: Int, val number: Int, val totalElements: Long, 
 /** One page of cards (`CardPage`). */
 @Serializable
 data class CardPageDto(val content: List<CardDto>, val page: PageMetaDto)
+
+/** Body of POST /api/v1/cards/batch; the API accepts one to one hundred card IDs. */
+@Serializable
+data class CardBatchRequestDto(val cardIds: List<Long>)

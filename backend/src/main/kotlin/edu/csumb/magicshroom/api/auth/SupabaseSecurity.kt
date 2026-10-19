@@ -44,6 +44,7 @@ class SupabaseSecurity(@Value("\${magicshroom.auth.issuer}") private val issuer:
     @Bean
     fun apiFilterChain(http: HttpSecurity): SecurityFilterChain = http.csrf { it.disable() }
         .authorizeHttpRequests {
+            it.requestMatchers(HttpMethod.POST, "/api/v1/cards/batch").permitAll()
             it.requestMatchers(
                 HttpMethod.GET,
                 "/api/v1/cards",

@@ -5,6 +5,7 @@ import edu.csumb.magicshroom.data.api.BearerTokenInterceptor
 import edu.csumb.magicshroom.data.api.createMagicShroomApi
 import edu.csumb.magicshroom.data.auth.SupabaseAuthRepository
 import edu.csumb.magicshroom.data.repository.CardRepository
+import edu.csumb.magicshroom.data.repository.DeckRepository
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.createSupabaseClient
@@ -42,4 +43,7 @@ class AppContainer {
 
     /** Card catalog calls, authenticated with the current Supabase access token. */
     val cardRepository = CardRepository(api)
+
+    /** Deck calls that resolve all deck entries through the shared bulk card cache. */
+    val deckRepository = DeckRepository(api, cardRepository)
 }

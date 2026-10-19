@@ -79,6 +79,14 @@ class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: J
     /** Finds a card by numeric API id. */
     override fun findById(id: Long): Card? = jdbc.query("select $columns from cards where id = ?", mapper, id).firstOrNull()
 
+    /** Fetches a bounded set of cards with a single PostgreSQL query. */
+    override fun findByIds(ids: List<Long>): List<Card> {
+        val uniqueIds = ids.distinct()
+        if (uniqueIds.isEmpty()) return emptyList()
+        val placeholders = uniqueIds.joinToString(",") { "?" }
+        return jdbc.query("select $columns from cards where id in ($placeholders)", mapper, *uniqueIds.toTypedArray())
+    }
+
     /** Finds a card by its stable archive UUID. */
     override fun findByUuid(uuid: UUID): Card? = jdbc.query("select $columns from cards where uuid = ?", mapper, uuid).firstOrNull()
 

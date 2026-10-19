@@ -81,6 +81,13 @@ class SupabasePostgresAuthIntegrationTest {
         assertEquals(201, createdCard.statusCode())
         val cardId = createdCard.jsonPath().getLong("id")
 
+        val cardBatch = given().port(port).contentType("application/json")
+            .body("""{"cardIds":[$cardId]}""")
+            .post("/api/v1/cards/batch")
+        assertEquals(200, cardBatch.statusCode())
+        assertEquals(cardId, cardBatch.jsonPath().getLong("[0].id"))
+        assertEquals("Supabase Integration Card", cardBatch.jsonPath().getString("[0].cardName"))
+
         val cardSearch = given().port(port).queryParam("name", "integration").queryParam("color", "R")
             .get("/api/v1/cards")
         assertEquals(200, cardSearch.statusCode())

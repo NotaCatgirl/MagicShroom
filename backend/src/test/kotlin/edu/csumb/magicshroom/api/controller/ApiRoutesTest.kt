@@ -70,6 +70,34 @@ class ApiRoutesTest(@Autowired private val mockMvc: MockMvc) {
 		}
 	}
 
+	/** Returns unique full card records in request order from the public batch route. */
+	@Test
+	fun `batch cards preserves request order and removes duplicate ids`() {
+		mockMvc.post("/api/v1/cards/batch") { json("""{"cardIds":[2,1,2]}""") }.andExpect {
+			status { isOk() }
+			jsonPath("$.length()") { value(2) }
+			jsonPath("$[0].id") { value(2) }
+			jsonPath("$[1].id") { value(1) }
+			jsonPath("$[1].cardName") { value("Lightning Bolt") }
+		}
+	}
+
+	/** Rejects empty, oversized, non-positive, and unknown card batches. */
+	@Test
+	fun `batch cards validates ids and reports missing cards`() {
+		mockMvc.post("/api/v1/cards/batch") { json("""{"cardIds":[]}""") }
+			.andExpect { status { isBadRequest() } }
+		val oversizedIds = (1..101).joinToString(",")
+		mockMvc.post("/api/v1/cards/batch") { json("""{"cardIds":[$oversizedIds]}""") }
+			.andExpect { status { isBadRequest() } }
+		mockMvc.post("/api/v1/cards/batch") { json("""{"cardIds":[0]}""") }
+			.andExpect { status { isBadRequest() } }
+		mockMvc.post("/api/v1/cards/batch") { json("""{"cardIds":[1,999]}""") }.andExpect {
+			status { isNotFound() }
+			jsonPath("$.detail") { value("Cards not found: 999.") }
+		}
+	}
+
 	@Test
 	fun `filters cards by name and color identity together`() {
 		mockMvc.get("/api/v1/cards?name=LIGHT&color=W").andExpect {
