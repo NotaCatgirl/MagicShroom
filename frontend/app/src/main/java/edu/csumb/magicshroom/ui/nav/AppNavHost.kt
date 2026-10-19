@@ -8,17 +8,21 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import edu.csumb.magicshroom.data.auth.AuthRepository
 import edu.csumb.magicshroom.data.auth.AuthSession
 import edu.csumb.magicshroom.data.auth.DemoAuthRepository
 import edu.csumb.magicshroom.ui.account.UserScreen
 import edu.csumb.magicshroom.ui.login.LoginScreen
 import edu.csumb.magicshroom.ui.search.SearchScreen
+import edu.csumb.magicshroom.ui.detail.CardDetailScreen
 
 private object AppRoute {
     const val LOGIN = "login"
     const val SEARCH = "search"
     const val ACCOUNT = "account"
+    const val CARD = "cards/{cardId}"
 }
 
 /**
@@ -35,7 +39,7 @@ fun AppNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = AppRoute.LOGIN,
+        startDestination = AppRoute.SEARCH,
     ) {
         composable(AppRoute.LOGIN) {
             LoginScreen(
@@ -43,7 +47,7 @@ fun AppNavHost(
                     val newSession = authRepository.signIn(email, password)
                     if (newSession != null) {
                         session = newSession
-                        navController.navigate(AppRoute.SEARCH) {
+                        navController.navigate(AppRoute.ACCOUNT) {
                             popUpTo(AppRoute.LOGIN) { inclusive = true }
                             launchSingleTop = true
                         }
@@ -57,13 +61,19 @@ fun AppNavHost(
             SearchScreen(
                 canAccessBackend = canAccessBackend,
                 onRequestLocalNetworkPermission = onRequestLocalNetworkPermission,
+                onCardClick = { navController.navigate("cards/$it") },
                 onAccountClick = {
-                    if (session != null) {
-                        navController.navigate(AppRoute.ACCOUNT) {
-                            launchSingleTop = true
-                        }
+                    navController.navigate(if (session == null) AppRoute.LOGIN else AppRoute.ACCOUNT) {
+                        launchSingleTop = true
                     }
                 },
+            )
+        }
+
+        composable(AppRoute.CARD, arguments = listOf(navArgument("cardId") { type = NavType.LongType })) { entry ->
+            CardDetailScreen(
+                cardId = requireNotNull(entry.arguments).getLong("cardId"),
+                onBack = { navController.popBackStack() },
             )
         }
 

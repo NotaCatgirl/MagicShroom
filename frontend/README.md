@@ -1,10 +1,10 @@
 # MagicShroom Android app
 
-The current Compose app opens a demo login, then a searchable card list and a read-only account
-screen. Sign in with `testEmail1@gmail.com` and `password1`. The demo account is local to the app;
-search uses the backend's public `GET /api/v1/cards` endpoint, so the Android app does not need
-Supabase credentials for this flow. Configure the backend separately as described in its README.
-Card details and deck actions are not connected to this screen yet.
+The current Compose app opens a public searchable card gallery and card detail screen. Image URLs
+come from the backend's public `GET /api/v1/cards` endpoint; the app loads scans from Scryfall.
+Sign in with `testEmail1@gmail.com` and `password1` to view the read-only account screen. The demo
+account is local to the app; search and card images do not require Supabase credentials. Configure
+the backend and run the Scryfall image metadata import as described in [`backend/README.md`](../backend/README.md).
 
 Open `frontend/` in Android Studio and run the app. The debug build defaults to
 `http://10.0.2.2:8080`, which reaches a backend running on your computer from the Android

@@ -42,6 +42,21 @@ temporary PostgreSQL database before the one-time `archive/AllCards.json` import
 400 MB rolls back. The importer preserves archive-only scalar fields in typed columns and the
 complete `foreignData` payload in JSONB while returning the existing card API shape.
 
+## Card images
+
+Flyway applies `V3__card_images.sql`, which adds a small metadata table keyed by the existing
+`scryfallOracleId`. It stores Scryfall IDs, set codes, and URLs for card faces; it does not store
+image files. Public card responses include `imageFaces` (small and normal URLs) when a match is
+available.
+
+To backfill images, download Scryfall's current **Oracle Cards** bulk export and run the backend
+once with `--magicshroom.images.import.path=/absolute/path/to/oracle-cards.jsonl` set as an
+application argument. The importer accepts a JSON array or uncompressed JSON Lines (`.jsonl`)
+file, matches existing Oracle IDs, validates Scryfall image URLs, and upserts in batches. It reports
+the number matched and unmatched. Normal service startup does not contact Scryfall; Android loads
+the returned image URLs directly and caches them on device.
+Do not set the import path in the Render service's normal start command.
+
 ## Docker
 
 `docker build -t magicshroom-api .` builds a production JAR in a JDK 25 stage and runs it from a
