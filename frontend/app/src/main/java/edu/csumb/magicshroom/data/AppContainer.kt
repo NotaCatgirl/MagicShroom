@@ -8,6 +8,7 @@ import edu.csumb.magicshroom.data.repository.CardRepository
 import edu.csumb.magicshroom.data.repository.DeckRepository
 import edu.csumb.magicshroom.data.repository.ApiUserRepository
 import edu.csumb.magicshroom.data.repository.UserRepository
+import edu.csumb.magicshroom.data.repository.DeckRepository
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.createSupabaseClient
@@ -61,4 +62,7 @@ class AppContainer {
     val deckRepository = DeckRepository(api, cardRepository)
     /** The signed-in user's account and admin user management. */
     val userRepository: UserRepository = ApiUserRepository(api)
+
+    /** Deck calls that resolve all deck entries through the shared bulk card cache. */
+    val deckRepository = DeckRepository(api, cardRepository)
 }

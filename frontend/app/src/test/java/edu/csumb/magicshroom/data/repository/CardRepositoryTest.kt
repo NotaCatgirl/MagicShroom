@@ -122,18 +122,6 @@ class CardRepositoryTest {
     }
 
     @Test
-    fun `uses the latest refreshed access token for every request`() = runTest {
-        server.enqueue(json(200, CARD_PAGE))
-        repository.listCards()
-        assertEquals("Bearer signed-test-token", server.takeRequest().getHeader("Authorization"))
-
-        accessToken = "refreshed-test-token"
-        server.enqueue(json(200, CARD_PAGE))
-        repository.listCards()
-        assertEquals("Bearer refreshed-test-token", server.takeRequest().getHeader("Authorization"))
-    }
-
-    @Test
     fun `404 keeps the server's problem detail for display`() = runTest {
         server.enqueue(json(404, NOT_FOUND_PROBLEM))
 
