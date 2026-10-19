@@ -130,6 +130,13 @@ class PostgresUserRepository(private val jdbc: JdbcTemplate) : UserRepository {
     /** Finds a user by the API's numeric id. */
     override fun findById(id: Long): User? = jdbc.query("select id, email, display_name, role from app_users where id = ?", mapper, id).firstOrNull()
 
+    /** Returns the Supabase Auth identity which owns the application account. */
+    override fun findAuthUserIdById(id: Long): UUID? = jdbc.query(
+        "select auth_user_id from app_users where id = ?",
+        { rs, _ -> rs.getObject("auth_user_id", UUID::class.java) },
+        id,
+    ).firstOrNull()
+
     /** Creates an application account for an Auth subject on first valid request. */
     override fun findOrCreate(authUserId: UUID, email: String, displayName: String): User =
         jdbc.query("""insert into app_users (auth_user_id, email, display_name) values (?, ?, ?)

@@ -5,7 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** Unit tests for the temporary local authentication behavior. */
+/** Unit tests for the deterministic authentication fake used by UI tests. */
 class DemoAuthRepositoryTest {
     private val repository = DemoAuthRepository()
 
@@ -18,7 +18,7 @@ class DemoAuthRepositoryTest {
 
         assertEquals("testUser1", session?.user?.displayName)
         assertEquals("USER", session?.user?.role)
-        assertEquals(session, repository.currentSession)
+        assertEquals(AuthState.SignedIn(requireNotNull(session)), repository.authState.value)
     }
 
     @Test
@@ -29,6 +29,6 @@ class DemoAuthRepositoryTest {
         )
 
         assertNull(session)
-        assertNull(repository.currentSession)
+        assertEquals(AuthState.SignedOut, repository.authState.value)
     }
 }

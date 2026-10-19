@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -22,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -39,21 +41,25 @@ import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BorderLavender
 import edu.csumb.magicshroom.ui.theme.BrandPurple
 import edu.csumb.magicshroom.ui.theme.MagicShroomTheme
+import kotlinx.coroutines.launch
 
 /** Stable identifiers used by the account Compose UI test. */
 object UserTestTags {
     const val SCREEN = "user_screen"
     const val BACK = "user_back"
+    const val SIGN_OUT = "user_sign_out"
 }
 
-/** Displays basic read-only information for the signed-in user. */
+/** Displays signed-in account information and a sign-out action. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserScreen(
     user: UserProfile,
     onBack: () -> Unit,
+    onSignOut: suspend () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val scope = rememberCoroutineScope()
     Scaffold(
         modifier = modifier.testTag(UserTestTags.SCREEN),
         containerColor = AppBackground,
@@ -133,6 +139,13 @@ fun UserScreen(
                 HorizontalDivider(color = BorderLavender)
                 UserInfoRow(label = "Role", value = user.role.toDisplayRole())
             }
+
+            Button(
+                onClick = { scope.launch { onSignOut() } },
+                modifier = Modifier.fillMaxWidth().padding(top = 28.dp).testTag(UserTestTags.SIGN_OUT),
+            ) {
+                Text("Sign out")
+            }
         }
     }
 }
@@ -204,6 +217,7 @@ private fun UserScreenPreview() {
                 role = "USER",
             ),
             onBack = {},
+            onSignOut = {},
         )
     }
 }

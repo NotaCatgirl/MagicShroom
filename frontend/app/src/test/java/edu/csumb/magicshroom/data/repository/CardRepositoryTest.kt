@@ -1,7 +1,7 @@
 package edu.csumb.magicshroom.data.repository
 
 import edu.csumb.magicshroom.data.api.Color
-import edu.csumb.magicshroom.data.api.StubAuthInterceptor
+import edu.csumb.magicshroom.data.api.BearerTokenInterceptor
 import edu.csumb.magicshroom.data.api.createMagicShroomApi
 import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
@@ -20,11 +20,12 @@ import org.junit.Test
 class CardRepositoryTest {
     private val server = MockWebServer()
     private lateinit var repository: CardRepository
+    private var accessToken: String? = "signed-test-token"
 
     @Before
     fun setUp() {
         server.start()
-        val client = OkHttpClient.Builder().addInterceptor(StubAuthInterceptor("2")).build()
+        val client = OkHttpClient.Builder().addInterceptor(BearerTokenInterceptor { accessToken }).build()
         repository = CardRepository(createMagicShroomApi(server.url("/").toString(), client))
     }
 
@@ -41,13 +42,26 @@ class CardRepositoryTest {
 
         val request = server.takeRequest()
         assertEquals("/api/v1/cards?name=bolt&color=R&page=0&size=20", request.path)
-        assertEquals("2", request.getHeader(StubAuthInterceptor.HEADER))
+        assertEquals("Bearer signed-test-token", request.getHeader("Authorization"))
+        assertEquals(null, request.getHeader("X-Stub-User-Id"))
         val page = (result as ApiResult.Success).data
         assertEquals(1L, page.page.totalElements)
         val card = page.content.single()
         assertEquals("Lightning Bolt", card.cardName)
         assertEquals(listOf(Color.R), card.colorIdentity)
         assertEquals("Relámpago", card.foreignData.single().name)
+    }
+
+    @Test
+    fun `uses the latest refreshed access token for every request`() = runTest {
+        server.enqueue(json(200, CARD_PAGE))
+        repository.listCards()
+        assertEquals("Bearer signed-test-token", server.takeRequest().getHeader("Authorization"))
+
+        accessToken = "refreshed-test-token"
+        server.enqueue(json(200, CARD_PAGE))
+        repository.listCards()
+        assertEquals("Bearer refreshed-test-token", server.takeRequest().getHeader("Authorization"))
     }
 
     @Test

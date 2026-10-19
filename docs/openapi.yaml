@@ -412,7 +412,7 @@ paths:
       tags: [Admin]
       operationId: deleteUser
       summary: Delete a user
-      description: Requires the ADMIN role. Also deletes the user's decks and deck-card rows.
+      description: Requires the ADMIN role. Deletes the user's Supabase Auth identity; the database cascades to their application account, decks, and deck-card rows. Requires SUPABASE_AUTH_ADMIN_KEY on the API server.
       responses:
         '204':
           description: User deleted; no response body
@@ -422,6 +422,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -431,7 +433,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT obtained by the Android app through OAuth2 Authorization Code with PKCE
+      description: Supabase Auth access JWT sent by Android as `Authorization: Bearer <token>`; email/password and Google OAuth sign-in are supported.
 
   parameters:
     CardId:
@@ -800,6 +802,15 @@ components:
           example:
             title: Unauthorized
             status: 401
+    ServiceUnavailable:
+      description: A required external service is not configured or unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            title: Service Unavailable
+            status: 503
     Forbidden:
       description: Valid token, but the user lacks the ADMIN role
       content:

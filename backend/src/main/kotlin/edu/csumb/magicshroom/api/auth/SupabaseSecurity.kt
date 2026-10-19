@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.MethodParameter
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -23,6 +24,7 @@ import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
 import java.util.UUID
+import java.sql.SQLException
 
 /** Allows the isolated mock profile to exercise its stub caller in route tests. */
 @Configuration
@@ -42,7 +44,15 @@ class SupabaseSecurity(@Value("\${magicshroom.auth.issuer}") private val issuer:
     @Bean
     fun apiFilterChain(http: HttpSecurity): SecurityFilterChain = http.csrf { it.disable() }
         .authorizeHttpRequests {
-            it.requestMatchers(HttpMethod.GET, "/api/v1/cards", "/api/v1/cards/*", "/actuator/health").permitAll()
+            it.requestMatchers(
+                HttpMethod.GET,
+                "/api/v1/cards",
+                "/api/v1/cards/*",
+                "/actuator/health",
+                "/swagger-ui.html",
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+            ).permitAll()
                 .anyRequest().authenticated()
         }
         .oauth2ResourceServer { it.jwt(Customizer.withDefaults()) }
@@ -81,7 +91,15 @@ class SupabaseCurrentUserResolver(private val users: UserRepository) : HandlerMe
             ?: throw UnauthorizedException("Token has no email claim.")
         val displayName = (jwt.getClaimAsMap("user_metadata")?.get("full_name") as? String)
             ?.takeIf(String::isNotBlank) ?: email.substringBefore('@')
-        val user = users.findOrCreate(subject, email, displayName)
+        val user = try {
+            users.findOrCreate(subject, email, displayName)
+        } catch (exception: DataIntegrityViolationException) {
+            val isMissingAuthIdentity = generateSequence<Throwable>(exception) { it.cause }
+                .filterIsInstance<SQLException>()
+                .any { it.sqlState == "23503" }
+            if (isMissingAuthIdentity) throw UnauthorizedException("This Supabase account has been deleted.")
+            throw exception
+        }
         return CurrentUser(user.id, user.role)
     }
 }

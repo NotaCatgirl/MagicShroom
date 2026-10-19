@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -41,10 +42,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import edu.csumb.magicshroom.data.auth.DemoAuthRepository
 import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BrandPurple
-import edu.csumb.magicshroom.ui.theme.LavenderSurface
 import edu.csumb.magicshroom.ui.theme.MagicShroomTheme
 import kotlinx.coroutines.launch
 
@@ -53,19 +52,22 @@ object LoginTestTags {
     const val EMAIL = "login_email"
     const val PASSWORD = "login_password"
     const val SUBMIT = "login_submit"
+    const val GOOGLE = "login_google"
     const val ERROR = "login_error"
 }
 
-/** Displays the email/password login design for the temporary demo account. */
+/** Displays sign-in options for existing Supabase email/password and Google accounts. */
 @Composable
 fun LoginScreen(
     onLogin: suspend (email: String, password: String) -> Boolean,
+    onGoogleSignIn: suspend () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scope = rememberCoroutineScope()
-    var email by rememberSaveable { mutableStateOf(DemoAuthRepository.TEST_EMAIL) }
-    var password by rememberSaveable { mutableStateOf(DemoAuthRepository.TEST_PASSWORD) }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
     var showError by rememberSaveable { mutableStateOf(false) }
+    var showGoogleError by rememberSaveable { mutableStateOf(false) }
     var isLoading by rememberSaveable { mutableStateOf(false) }
 
     Box(
@@ -170,6 +172,15 @@ fun LoginScreen(
                 )
             }
 
+            if (showGoogleError) {
+                Text(
+                    text = "Google sign-in could not be started. Please try again.",
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+
             Spacer(modifier = Modifier.height(if (showError) 20.dp else 30.dp))
 
             Button(
@@ -199,34 +210,29 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(34.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = LavenderSurface,
-                shape = RoundedCornerShape(18.dp),
+            OutlinedButton(
+                onClick = {
+                    scope.launch {
+                        isLoading = true
+                        showGoogleError = runCatching { onGoogleSignIn() }.isFailure
+                        isLoading = false
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(58.dp).testTag(LoginTestTags.GOOGLE),
+                shape = RoundedCornerShape(30.dp),
+                enabled = !isLoading,
             ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        text = "Demo account",
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 17.sp,
-                    )
-                    Text(
-                        text = DemoAuthRepository.TEST_EMAIL,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.sp,
-                    )
-                    Text(
-                        text = DemoAuthRepository.TEST_PASSWORD,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 16.sp,
-                    )
-                }
+                Text(text = "Continue with Google", fontSize = 17.sp)
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = "Use an existing MagicShroom account. New email accounts are managed through Supabase.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }
@@ -256,6 +262,6 @@ private fun loginFieldColors() = OutlinedTextFieldDefaults.colors(
 @Composable
 private fun LoginScreenPreview() {
     MagicShroomTheme {
-        LoginScreen(onLogin = { _, _ -> false })
+        LoginScreen(onLogin = { _, _ -> false }, onGoogleSignIn = {})
     }
 }
