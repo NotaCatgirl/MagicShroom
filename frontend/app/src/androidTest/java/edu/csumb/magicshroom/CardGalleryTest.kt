@@ -58,6 +58,7 @@ class CardGalleryTest {
         composeRule.onNodeWithText("2 of 2: Back").assertIsDisplayed()
     }
 
+    /** Provides a two-face sample card for gallery and detail UI tests. */
     private fun testCard() = CardDto(
         id = 1,
         uuid = "0318d56b-647f-4b0f-9306-9adc3312619d",

@@ -290,6 +290,7 @@ private fun SearchError(message: String, onRetry: () -> Unit) {
     }
 }
 
+/** Renders one card scan with a text fallback when the image is missing or unavailable. */
 @Composable
 private fun SearchCardTile(card: CardDto, onClick: () -> Unit) {
     Column(

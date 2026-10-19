@@ -40,7 +40,7 @@ internal object ScryfallImageMapper {
         return ScryfallImage(oracleId, cardId, setCode, faces)
     }
 
-    /** Accepts only Scryfall's HTTPS image host, never an arbitrary URL from bulk metadata. */
+    /** Returns a named display face only when both Scryfall HTTPS image URLs are usable. */
     private fun face(name: String, uris: JsonNode): CardImageFace? {
         val small = uris.path("small").asString()
         val normal = uris.path("normal").asString()
@@ -57,6 +57,7 @@ internal object ScryfallImageMapper {
 
 /** Reads either the traditional JSON-array export or Scryfall's newline-delimited JSON export. */
 internal object ScryfallImageExportReader {
+    /** Streams each card object from a JSON-array or newline-delimited Scryfall export. */
     fun forEachCard(path: Path, json: JsonMapper, consume: (JsonNode) -> Unit) {
         Files.newBufferedReader(path).use { reader ->
             reader.mark(1)

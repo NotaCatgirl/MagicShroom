@@ -19,6 +19,7 @@ class AppFlowTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    /** Checks public card browsing and navigation into the account sign-in flow. */
     @Test
     fun publicSearchCanOpenSignInAndAccount() {
         composeRule.setContent {
