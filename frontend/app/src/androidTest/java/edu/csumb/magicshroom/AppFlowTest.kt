@@ -14,24 +14,25 @@ import edu.csumb.magicshroom.ui.theme.MagicShroomTheme
 import org.junit.Rule
 import org.junit.Test
 
-/** Verifies the demo login, search, and account screen flow. */
+/** Verifies public browsing and sign-in for account features. */
 class AppFlowTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    /** Checks public card browsing and navigation into the account sign-in flow. */
     @Test
-    fun validLoginOpensSearchThenAccount() {
+    fun publicSearchCanOpenSignInAndAccount() {
         composeRule.setContent {
             MagicShroomTheme {
                 AppNavHost()
             }
         }
 
+        composeRule.onNodeWithTag(SearchTestTags.SCREEN).assertIsDisplayed()
+        composeRule.onNodeWithTag(SearchTestTags.ACCOUNT).performClick()
         composeRule.onNodeWithTag(LoginTestTags.EMAIL).assertIsDisplayed()
         composeRule.onNodeWithTag(LoginTestTags.SUBMIT).performClick()
 
-        composeRule.onNodeWithTag(SearchTestTags.SCREEN).assertIsDisplayed()
-        composeRule.onNodeWithTag(SearchTestTags.ACCOUNT).performClick()
         composeRule.onNodeWithTag(UserTestTags.SCREEN).assertIsDisplayed()
         composeRule.onNodeWithText(DemoAuthRepository.TEST_EMAIL).assertIsDisplayed()
         composeRule.onNodeWithText("User").assertIsDisplayed()
