@@ -1,19 +1,24 @@
 package edu.csumb.magicshroom.ui.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import edu.csumb.magicshroom.data.api.Role
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import edu.csumb.magicshroom.data.auth.AuthRepository
 import edu.csumb.magicshroom.data.auth.AuthSession
 import edu.csumb.magicshroom.data.auth.DemoAuthRepository
+import edu.csumb.magicshroom.ui.account.AccountViewModel
 import edu.csumb.magicshroom.ui.account.UserScreen
+import edu.csumb.magicshroom.ui.admin.AdminScreen
 import edu.csumb.magicshroom.ui.login.LoginScreen
 import edu.csumb.magicshroom.ui.search.SearchScreen
 import edu.csumb.magicshroom.ui.detail.CardDetailScreen
@@ -22,6 +27,7 @@ private object AppRoute {
     const val LOGIN = "login"
     const val SEARCH = "search"
     const val ACCOUNT = "account"
+    const val ADMIN = "admin"
     const val CARD = "cards/{cardId}"
 }
 
@@ -78,12 +84,24 @@ fun AppNavHost(
         }
 
         composable(AppRoute.ACCOUNT) {
+            val accountViewModel: AccountViewModel = viewModel(factory = AccountViewModel.Factory)
+            val me by accountViewModel.me.collectAsState()
             session?.let { activeSession ->
                 UserScreen(
-                    user = activeSession.user,
+                    // The server's record is the source of truth for the role once it has loaded.
+                    user = activeSession.user.copy(role = me?.role?.name ?: activeSession.user.role),
                     onBack = { navController.popBackStack() },
+                    onAdminClick = if (me?.role == Role.ADMIN) {
+                        { navController.navigate(AppRoute.ADMIN) { launchSingleTop = true } }
+                    } else {
+                        null
+                    },
                 )
             }
+        }
+
+        composable(AppRoute.ADMIN) {
+            AdminScreen(onBack = { navController.popBackStack() })
         }
     }
 }

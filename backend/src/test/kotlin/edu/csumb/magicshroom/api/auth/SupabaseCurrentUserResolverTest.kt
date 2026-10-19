@@ -1,5 +1,6 @@
 package edu.csumb.magicshroom.api.auth
 
+import edu.csumb.magicshroom.api.dto.PageResponse
 import edu.csumb.magicshroom.api.error.UnauthorizedException
 import edu.csumb.magicshroom.api.model.Role
 import edu.csumb.magicshroom.api.model.User
@@ -22,6 +23,15 @@ class SupabaseCurrentUserResolverTest {
     private val repository = object : UserRepository {
         /** Unused in this resolver test. */
         override fun findById(id: Long): User? = null
+
+        /** Unused in this resolver test. */
+        override fun findPage(role: Role?, page: Int, size: Int): PageResponse<User> = error("unused")
+
+        /** Unused in this resolver test. */
+        override fun countByRole(role: Role): Long = error("unused")
+
+        /** Unused in this resolver test. */
+        override fun updateRole(id: Long, role: Role): User? = error("unused")
 
         /** Records the Auth subject handed to application account creation. */
         override fun findOrCreate(authUserId: UUID, email: String, displayName: String): User {

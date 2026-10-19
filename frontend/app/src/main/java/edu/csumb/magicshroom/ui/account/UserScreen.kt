@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -44,15 +45,20 @@ import edu.csumb.magicshroom.ui.theme.MagicShroomTheme
 object UserTestTags {
     const val SCREEN = "user_screen"
     const val BACK = "user_back"
+    const val ADMIN = "user_admin"
 }
 
-/** Displays basic read-only information for the signed-in user. */
+/**
+ * Displays basic read-only information for the signed-in user. [onAdminClick] is non-null only for
+ * admins (as decided by the server) and shows the "Admin tools" button.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserScreen(
     user: UserProfile,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onAdminClick: (() -> Unit)? = null,
 ) {
     Scaffold(
         modifier = modifier.testTag(UserTestTags.SCREEN),
@@ -132,6 +138,20 @@ fun UserScreen(
                 UserInfoRow(label = "Email", value = user.email)
                 HorizontalDivider(color = BorderLavender)
                 UserInfoRow(label = "Role", value = user.role.toDisplayRole())
+            }
+
+            if (onAdminClick != null) {
+                Button(
+                    onClick = onAdminClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp)
+                        .height(52.dp)
+                        .testTag(UserTestTags.ADMIN),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Text("Admin tools", fontSize = 18.sp)
+                }
             }
         }
     }

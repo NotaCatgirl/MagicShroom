@@ -1,5 +1,7 @@
 package edu.csumb.magicshroom.api.repository.json
 
+import edu.csumb.magicshroom.api.dto.PageResponse
+import edu.csumb.magicshroom.api.model.Role
 import edu.csumb.magicshroom.api.model.User
 import edu.csumb.magicshroom.api.repository.UserRepository
 import org.springframework.context.annotation.Profile
@@ -18,6 +20,13 @@ class JsonUserRepository(jsonMapper: JsonMapper) : UserRepository {
 	}
 
 	override fun findById(id: Long): User? = users[id]
+
+	override fun findPage(role: Role?, page: Int, size: Int): PageResponse<User> =
+		PageResponse.of(users.values.filter { role == null || it.role == role }.sortedBy { it.id }, page, size)
+
+	override fun countByRole(role: Role): Long = users.values.count { it.role == role }.toLong()
+
+	override fun updateRole(id: Long, role: Role): User? = users.computeIfPresent(id) { _, user -> user.copy(role = role) }
 
 	override fun deleteById(id: Long): Boolean = users.remove(id) != null
 }
