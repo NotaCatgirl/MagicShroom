@@ -28,6 +28,7 @@ data class Card(
 	val legalities: List<CardLegality> = emptyList(),
 	val purchaseUrls: List<PurchaseUrl> = emptyList(),
 	val rulings: List<Ruling> = emptyList(),
+	val imageFaces: List<CardImageFace> = emptyList(),
 ) {
 	/** True if this card's color identity includes [color]. Colorless ([Color.C]) matches an empty identity. */
 	fun hasColorIdentity(color: Color): Boolean =
@@ -42,6 +43,9 @@ data class CardLegality(val format: String, val status: LegalityStatus)
 
 /** Where to buy a card. */
 data class PurchaseUrl(val vendor: String, val url: String)
+
+/** A real card face from Scryfall's representative printing. */
+data class CardImageFace(val name: String, val smallUrl: String, val normalUrl: String)
 
 /** An official rules clarification for a card. */
 data class Ruling(val date: LocalDate? = null, val text: String)

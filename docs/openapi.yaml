@@ -688,6 +688,19 @@ components:
           items:
             $ref: '#/components/schemas/Ruling'
 
+    CardImageFace:
+      type: object
+      required: [name, smallUrl, normalUrl]
+      properties:
+        name:
+          type: string
+        smallUrl:
+          type: string
+          format: uri
+        normalUrl:
+          type: string
+          format: uri
+
     CardInput:
       description: Complete card body used by POST and PUT.
       type: object
@@ -711,6 +724,12 @@ components:
           format: int64
           readOnly: true
           example: 1001
+        imageFaces:
+          type: array
+          readOnly: true
+          description: Full-card scans from one representative Scryfall printing; empty if unavailable.
+          items:
+            $ref: '#/components/schemas/CardImageFace'
       allOf:
         - $ref: '#/components/schemas/CardInput'
 

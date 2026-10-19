@@ -30,7 +30,12 @@ data class CardDto(
     val legalities: List<CardLegalityDto> = emptyList(),
     val purchaseUrls: List<PurchaseUrlDto> = emptyList(),
     val rulings: List<RulingDto> = emptyList(),
+    val imageFaces: List<CardImageFaceDto> = emptyList(),
 )
+
+/** A full-card scan from the representative printing, in display order. */
+@Serializable
+data class CardImageFaceDto(val name: String, val smallUrl: String, val normalUrl: String)
 
 /** A card's name and text in another language. */
 @Serializable
