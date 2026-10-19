@@ -33,6 +33,7 @@ class SupabaseCurrentUserResolverTest {
 
         /** Unused in this resolver test. */
         override fun updateRole(id: Long, role: Role): User? = error("unused")
+        override fun findAuthUserIdById(id: Long): UUID? = null
 
         /** Records the Auth subject handed to application account creation. */
         override fun findOrCreate(authUserId: UUID, email: String, displayName: String): User {

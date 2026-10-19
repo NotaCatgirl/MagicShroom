@@ -29,5 +29,10 @@ class JsonUserRepository(jsonMapper: JsonMapper) : UserRepository {
 
 	override fun updateRole(id: Long, role: Role): User? = users.computeIfPresent(id) { _, user -> user.copy(role = role) }
 
+	/** Returns a stable stand-in identity for the mock-only deletion flow. */
+	override fun findAuthUserIdById(id: Long): UUID? = id.takeIf(users::containsKey)?.let {
+		UUID.nameUUIDFromBytes("mock-auth-user-$it".toByteArray())
+	}
+
 	override fun deleteById(id: Long): Boolean = users.remove(id) != null
 }

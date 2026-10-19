@@ -6,7 +6,6 @@ import edu.csumb.magicshroom.data.api.createMagicShroomApi
 import edu.csumb.magicshroom.data.auth.SupabaseAuthRepository
 import edu.csumb.magicshroom.data.repository.CardRepository
 import edu.csumb.magicshroom.data.repository.DeckRepository
-import edu.csumb.magicshroom.data.api.StubAuthInterceptor
 import edu.csumb.magicshroom.data.repository.ApiUserRepository
 import edu.csumb.magicshroom.data.repository.UserRepository
 import io.github.jan.supabase.auth.Auth
@@ -36,7 +35,14 @@ class AppContainer {
         .addInterceptor(BearerTokenInterceptor(authRepository::accessToken))
         .apply {
             // Optional debug identity for the mock backend; production uses the Supabase token above.
-            if (BuildConfig.STUB_USER_ID.isNotBlank()) addInterceptor(StubAuthInterceptor(BuildConfig.STUB_USER_ID))
+            if (BuildConfig.STUB_USER_ID.isNotBlank()) {
+                addInterceptor { chain ->
+                    val request = chain.request().newBuilder()
+                        .header("X-Stub-User-Id", BuildConfig.STUB_USER_ID)
+                        .build()
+                    chain.proceed(request)
+                }
+            }
         }
         .addInterceptor(
             HttpLoggingInterceptor().apply {

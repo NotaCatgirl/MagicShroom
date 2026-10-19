@@ -19,8 +19,8 @@ interface UserRepository {
 	/** Sets the role of user [id] and returns the updated user, or null if there is none. */
 	fun updateRole(id: Long, role: Role): User?
 
-	/** The Supabase Auth user linked to [id], or null when there is none (always null for mock users). */
-	fun findAuthUserId(id: Long): UUID? = null
+	/** The Supabase Auth UUID linked to [id], or null. */
+	fun findAuthUserIdById(id: Long): UUID? = null
 
 	/** Finds or creates the application account linked to a validated Supabase Auth subject. */
 	fun findOrCreate(authUserId: UUID, email: String, displayName: String): User =

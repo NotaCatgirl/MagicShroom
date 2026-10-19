@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -52,8 +52,8 @@ object UserTestTags {
 }
 
 /**
- * Displays signed-in account information, sign-out, and admin navigation when the server confirms
- * that the user has the ADMIN role.
+ * Displays signed-in account information, a sign-out action, and admin tools when the server
+ * confirms that the signed-in user has the ADMIN role.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

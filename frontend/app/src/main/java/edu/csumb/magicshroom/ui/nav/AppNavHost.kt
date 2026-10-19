@@ -8,21 +8,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import edu.csumb.magicshroom.data.api.Role
-import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import edu.csumb.magicshroom.data.api.Role
 import edu.csumb.magicshroom.data.auth.AuthRepository
 import edu.csumb.magicshroom.data.auth.AuthState
 import edu.csumb.magicshroom.ui.account.AccountViewModel
 import edu.csumb.magicshroom.ui.account.UserScreen
 import edu.csumb.magicshroom.ui.admin.AdminScreen
+import edu.csumb.magicshroom.ui.detail.CardDetailScreen
 import edu.csumb.magicshroom.ui.login.LoginScreen
 import edu.csumb.magicshroom.ui.search.SearchScreen
-import edu.csumb.magicshroom.ui.detail.CardDetailScreen
 
 private object AppRoute {
     const val SEARCH = "search"
@@ -49,15 +49,13 @@ fun AppNavHost(
         )
         is AuthState.SignedIn -> {
             val navController = rememberNavController()
-            val accountViewModel: AccountViewModel = viewModel(factory = AccountViewModel.Factory)
-            val me by accountViewModel.me.collectAsState()
             NavHost(navController = navController, startDestination = AppRoute.SEARCH) {
                 composable(AppRoute.SEARCH) {
                     SearchScreen(
                         canAccessBackend = canAccessBackend,
                         onRequestLocalNetworkPermission = onRequestLocalNetworkPermission,
-                        onAccountClick = { navController.navigate(AppRoute.ACCOUNT) { launchSingleTop = true } },
                         onCardClick = { navController.navigate("cards/$it") },
+                        onAccountClick = { navController.navigate(AppRoute.ACCOUNT) { launchSingleTop = true } },
                     )
                 }
                 composable(AppRoute.CARD, arguments = listOf(navArgument("cardId") { type = NavType.LongType })) { entry ->
@@ -67,6 +65,8 @@ fun AppNavHost(
                     )
                 }
                 composable(AppRoute.ACCOUNT) {
+                    val accountViewModel: AccountViewModel = viewModel(factory = AccountViewModel.Factory)
+                    val me by accountViewModel.me.collectAsState()
                     UserScreen(
                         user = state.session.user.copy(role = me?.role?.name ?: state.session.user.role),
                         onBack = { navController.popBackStack() },
