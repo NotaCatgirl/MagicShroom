@@ -5,6 +5,7 @@
     "text": "Lightning Bolt deals 3 damage to any target.",
     "types": ["Instant"], "subtypes": [], "supertypes": [], "printings": ["LEA", "M10", "2XM"],
     "foreignData": [{ "language": "Spanish", "name": "Relámpago", "text": null }],
+    "imageFaces": [{ "name": "Lightning Bolt", "smallUrl": "https://cards.scryfall.io/small/front/6/7/example.jpg", "normalUrl": "https://cards.scryfall.io/normal/front/6/7/example.jpg" }],
     "legalities": [
       { "format": "modern", "status": "LEGAL" }, { "format": "legacy", "status": "LEGAL" },
       { "format": "vintage", "status": "LEGAL" }, { "format": "commander", "status": "LEGAL" }

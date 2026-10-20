@@ -50,6 +50,7 @@ class CardRepositoryTest {
         assertEquals("Lightning Bolt", card.cardName)
         assertEquals(listOf(Color.R), card.colorIdentity)
         assertEquals("Relámpago", card.foreignData.single().name)
+        assertEquals("Lightning Bolt", card.imageFaces.single().name)
 
         assertEquals("Lightning Bolt", (repository.getCard(1) as ApiResult.Success).data.cardName)
         assertEquals(1, server.requestCount)
@@ -160,7 +161,7 @@ class CardRepositoryTest {
     private fun cardJson(id: Long) = """{"id":$id,"uuid":"uuid-$id","cardName":"Card $id"}"""
 
     private companion object {
-        const val CARD_PAGE = """{"content":[{"id":1,"uuid":"0318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Lightning Bolt","colorIdentity":["R"],"colors":["R"],"convertedManaCost":1.0,"manaCost":"{R}","scryfallOracleId":null,"text":"Lightning Bolt deals 3 damage to any target.","types":["Instant"],"subtypes":[],"supertypes":[],"printings":["LEA","M10","2XM"],"foreignData":[{"language":"Spanish","name":"Relámpago","text":null}],"legalities":[{"format":"modern","status":"LEGAL"},{"format":"legacy","status":"LEGAL"},{"format":"vintage","status":"LEGAL"},{"format":"commander","status":"LEGAL"}],"purchaseUrls":[{"vendor":"example","url":"https://example.com/cards/lightning-bolt"}],"rulings":[]}],"page":{"size":20,"number":0,"totalElements":1,"totalPages":1}}"""
+        const val CARD_PAGE = """{"content":[{"id":1,"uuid":"0318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Lightning Bolt","colorIdentity":["R"],"colors":["R"],"convertedManaCost":1.0,"manaCost":"{R}","scryfallOracleId":null,"text":"Lightning Bolt deals 3 damage to any target.","types":["Instant"],"subtypes":[],"supertypes":[],"printings":["LEA","M10","2XM"],"foreignData":[{"language":"Spanish","name":"Relámpago","text":null}],"imageFaces":[{"name":"Lightning Bolt","smallUrl":"https://cards.scryfall.io/small/front/6/7/example.jpg","normalUrl":"https://cards.scryfall.io/normal/front/6/7/example.jpg"}],"legalities":[{"format":"modern","status":"LEGAL"},{"format":"legacy","status":"LEGAL"},{"format":"vintage","status":"LEGAL"},{"format":"commander","status":"LEGAL"}],"purchaseUrls":[{"vendor":"example","url":"https://example.com/cards/lightning-bolt"}],"rulings":[]}],"page":{"size":20,"number":0,"totalElements":1,"totalPages":1}}"""
         const val NOT_FOUND_PROBLEM = """{"detail":"Card 999 was not found.","instance":"/api/v1/cards/999","status":404,"title":"Not Found"}"""
         const val CARD_BATCH = """[{"id":2,"uuid":"a318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Counterspell"},{"id":1,"uuid":"0318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Lightning Bolt"}]"""
         const val CARD_TWO = """{"id":2,"uuid":"a318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Counterspell"}"""

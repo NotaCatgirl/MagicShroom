@@ -67,6 +67,7 @@ class ApiRoutesTest(@Autowired private val mockMvc: MockMvc) {
 			jsonPath("$.foreignData[0].name") { value("Relámpago") }
 			jsonPath("$.legalities[0].format") { value("modern") }
 			jsonPath("$.purchaseUrls[0].vendor") { value("example") }
+			jsonPath("$.imageFaces[0].normalUrl") { value("https://cards.scryfall.io/normal/front/6/7/example.jpg") }
 		}
 	}
 

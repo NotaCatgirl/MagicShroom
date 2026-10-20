@@ -6,6 +6,9 @@ import edu.csumb.magicshroom.data.api.createMagicShroomApi
 import edu.csumb.magicshroom.data.auth.SupabaseAuthRepository
 import edu.csumb.magicshroom.data.repository.CardRepository
 import edu.csumb.magicshroom.data.repository.DeckRepository
+import edu.csumb.magicshroom.data.api.StubAuthInterceptor
+import edu.csumb.magicshroom.data.repository.ApiUserRepository
+import edu.csumb.magicshroom.data.repository.UserRepository
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.createSupabaseClient
@@ -31,6 +34,10 @@ class AppContainer {
 
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(BearerTokenInterceptor(authRepository::accessToken))
+        .apply {
+            // Optional debug identity for the mock backend; production uses the Supabase token above.
+            if (BuildConfig.STUB_USER_ID.isNotBlank()) addInterceptor(StubAuthInterceptor(BuildConfig.STUB_USER_ID))
+        }
         .addInterceptor(
             HttpLoggingInterceptor().apply {
                 // Logs "GET /api/v1/cards -> 200" lines to Logcat in debug builds.
@@ -46,4 +53,6 @@ class AppContainer {
 
     /** Deck calls that resolve all deck entries through the shared bulk card cache. */
     val deckRepository = DeckRepository(api, cardRepository)
+    /** The signed-in user's account and admin user management. */
+    val userRepository: UserRepository = ApiUserRepository(api)
 }

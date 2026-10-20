@@ -36,6 +36,8 @@ tags:
     description: Public card catalog and admin-only card management
   - name: Decks
     description: Decks owned by the authenticated user
+  - name: Users
+    description: The signed-in user's own account
   - name: Admin
     description: Operations that require the ADMIN role
 
@@ -435,14 +437,132 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/users:
+    get:
+      tags: [Admin]
+      operationId: listUsers
+      summary: List users
+      description: Requires the ADMIN role. Ordered by id; optionally only users with one role.
+      parameters:
+        - name: role
+          in: query
+          description: Only users with this role
+          schema:
+            $ref: '#/components/schemas/Role'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: One page of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/users/me:
+    get:
+      tags: [Users]
+      operationId: getMe
+      summary: Get my account
+      description: The signed-in user, including their role. The app uses it to decide whether to show admin tools.
+      responses:
+        '200':
+          description: The signed-in user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Users]
+      operationId: deleteMe
+      summary: Delete my account and all my data
+      description: >-
+        Deletes the signed-in user's decks, deck-card rows, and account, including the Supabase
+        Auth user when the server is configured with a Supabase secret key. Returns 409 if the
+        caller is the last admin.
+      responses:
+        '204':
+          description: Account deleted; no response body
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/users/{userId}:
     parameters:
       - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [Admin]
+      operationId: getUser
+      summary: Get one user
+      description: Requires the ADMIN role.
+      responses:
+        '200':
+          description: The user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Admin]
+      operationId: updateUserRole
+      summary: Grant or revoke the ADMIN role
+      description: Requires the ADMIN role. Returns 409 when it would remove the last admin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPatch'
+      responses:
+        '200':
+          description: The updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
     delete:
       tags: [Admin]
       operationId: deleteUser
       summary: Delete a user
-      description: Requires the ADMIN role. Deletes the user's Supabase Auth identity; the database cascades to their application account, decks, and deck-card rows. Requires SUPABASE_AUTH_ADMIN_KEY on the API server.
+      description: >-
+        Requires the ADMIN role. Deletes the user's decks, deck-card rows, and account, including
+        the Supabase Auth user when the server is configured with a Supabase secret key. Returns 409
+        if the user is the last admin.
       responses:
         '204':
           description: User deleted; no response body
@@ -452,8 +572,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '503':
-          $ref: '#/components/responses/ServiceUnavailable'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -598,6 +718,19 @@ components:
           items:
             $ref: '#/components/schemas/Ruling'
 
+    CardImageFace:
+      type: object
+      required: [name, smallUrl, normalUrl]
+      properties:
+        name:
+          type: string
+        smallUrl:
+          type: string
+          format: uri
+        normalUrl:
+          type: string
+          format: uri
+
     CardInput:
       description: Complete card body used by POST and PUT.
       type: object
@@ -636,6 +769,12 @@ components:
           format: int64
           readOnly: true
           example: 1001
+        imageFaces:
+          type: array
+          readOnly: true
+          description: Full-card scans from one representative Scryfall printing; empty if unavailable.
+          items:
+            $ref: '#/components/schemas/CardImageFace'
       allOf:
         - $ref: '#/components/schemas/CardInput'
 
@@ -803,6 +942,50 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Card'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    Role:
+      type: string
+      description: What a user may do. Stored in the database (app_users.role).
+      enum: [USER, ADMIN]
+      example: USER
+
+    User:
+      type: object
+      required: [id, email, displayName, role]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          example: 7
+        email:
+          type: string
+          format: email
+          example: player.one@example.com
+        displayName:
+          type: string
+          example: Player One
+        role:
+          $ref: '#/components/schemas/Role'
+
+    UserPatch:
+      description: Body of PATCH /api/v1/users/{userId}. The role is the only editable field.
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: '#/components/schemas/Role'
+
+    UserPage:
+      type: object
+      required: [content, page]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
         page:
           $ref: '#/components/schemas/PageMeta'
 

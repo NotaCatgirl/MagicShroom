@@ -14,8 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -48,9 +48,13 @@ object UserTestTags {
     const val SCREEN = "user_screen"
     const val BACK = "user_back"
     const val SIGN_OUT = "user_sign_out"
+    const val ADMIN = "user_admin"
 }
 
-/** Displays signed-in account information and a sign-out action. */
+/**
+ * Displays signed-in account information, sign-out, and admin navigation when the server confirms
+ * that the user has the ADMIN role.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserScreen(
@@ -58,6 +62,7 @@ fun UserScreen(
     onBack: () -> Unit,
     onSignOut: suspend () -> Unit,
     modifier: Modifier = Modifier,
+    onAdminClick: (() -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
     Scaffold(
@@ -145,6 +150,19 @@ fun UserScreen(
                 modifier = Modifier.fillMaxWidth().padding(top = 28.dp).testTag(UserTestTags.SIGN_OUT),
             ) {
                 Text("Sign out")
+            }
+            if (onAdminClick != null) {
+                Button(
+                    onClick = onAdminClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp)
+                        .height(52.dp)
+                        .testTag(UserTestTags.ADMIN),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Text("Admin tools", fontSize = 18.sp)
+                }
             }
         }
     }
