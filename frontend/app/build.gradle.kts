@@ -1,7 +1,15 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+}
+
+// Read the public Auth settings from the ignored root .env; database credentials stay server-side.
+val rootEnv = Properties().apply {
+    load(providers.fileContents(rootProject.layout.projectDirectory.file("../.env"))
+        .asText.orElse("").get().reader())
 }
 
 android {
@@ -19,8 +27,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val supabaseUrl = providers.gradleProperty("supabaseUrl").orElse("https://example.supabase.co").get()
-        val supabaseKey = providers.gradleProperty("supabasePublishableKey").orElse("sb_publishable_replace_me").get()
+        val supabaseUrl = providers.gradleProperty("supabaseUrl").orElse(
+            rootEnv.getProperty("SUPABASE_URL") ?: rootEnv.getProperty("supabaseUrl") ?: "https://example.supabase.co",
+        ).get().trim().removeSurrounding("\"").removeSurrounding("'")
+        val supabaseKey = providers.gradleProperty("supabasePublishableKey").orElse(
+            rootEnv.getProperty("SUPABASE_PUBLISHABLE_KEY") ?: rootEnv.getProperty("supabasePublishableKey")
+                ?: "sb_publishable_replace_me",
+        ).get().trim().removeSurrounding("\"").removeSurrounding("'")
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"$supabaseKey\"")

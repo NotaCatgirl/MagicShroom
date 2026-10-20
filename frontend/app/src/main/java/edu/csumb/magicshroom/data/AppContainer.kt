@@ -28,7 +28,7 @@ class AppContainer {
         }
     }
 
-    /** Production email, Google OAuth, and persisted-session implementation. */
+    /** Google-only sign-in, error reporting, and persisted Supabase sessions. */
     val authRepository = SupabaseAuthRepository(supabase)
 
     private val okHttpClient = OkHttpClient.Builder()

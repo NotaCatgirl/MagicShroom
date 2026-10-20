@@ -34,17 +34,17 @@ class MainActivity : ComponentActivity() {
         localNetworkGranted = it
     }
 
-    private val appContainer get() = (application as MagicShroomApplication).container
+    private val container get() = (application as MagicShroomApplication).container
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        appContainer.supabase.handleDeeplinks(intent)
+        handleAuthCallback(intent)
         localNetworkGranted = hasLocalNetworkAccess()
         setContent {
             MagicShroomTheme {
                 AppNavHost(
-                    authRepository = appContainer.authRepository,
+                    authRepository = container.authRepository,
                     canAccessBackend = localNetworkGranted,
                     onRequestLocalNetworkPermission = {
                         localNetworkPermission.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
@@ -67,7 +67,13 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        appContainer.supabase.handleDeeplinks(intent)
+        handleAuthCallback(intent)
+    }
+
+    private fun handleAuthCallback(intent: Intent) {
+        container.supabase.handleDeeplinks(intent, onError = {
+            container.authRepository.onCallbackError()
+        })
     }
 }
 
