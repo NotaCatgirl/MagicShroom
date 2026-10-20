@@ -19,8 +19,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        val supabaseUrl = providers.gradleProperty("supabaseUrl").orElse("https://example.supabase.co").get()
-        val supabaseKey = providers.gradleProperty("supabasePublishableKey").orElse("sb_publishable_replace_me").get()
+        val supabaseUrl = providers.gradleProperty("supabaseUrl").orElse("https://tsljlazjesyvapfwxpir.supabase.co").get()
+        val supabaseKey = providers.gradleProperty("supabasePublishableKey").orElse("sb_publishable_KJjB8xzootdgsCbu9lgvWw_E2Y2lz11").get()
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
         buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
         buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"$supabaseKey\"")
