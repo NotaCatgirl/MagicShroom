@@ -118,7 +118,14 @@ fun CardDetailContent(card: CardDto, onBack: () -> Unit) {
                         contentDescription = "${face.name} card face",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.fillMaxSize(),
-                        onError = { imageFailed = true },
+                        onError = {
+                            android.util.Log.e(
+                                "MagicShroomImage",
+                                "Failed to load $imageUrl",
+                                it.result.throwable,
+                            )
+                            imageFailed = true
+                        },
                     )
                 } else {
                     Text(card.cardName, modifier = Modifier.padding(24.dp), style = MaterialTheme.typography.headlineSmall)
