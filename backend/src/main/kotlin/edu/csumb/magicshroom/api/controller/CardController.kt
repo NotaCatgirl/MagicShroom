@@ -1,6 +1,7 @@
 package edu.csumb.magicshroom.api.controller
 
 import edu.csumb.magicshroom.api.auth.CurrentUser
+import edu.csumb.magicshroom.api.dto.CardBatchRequest
 import edu.csumb.magicshroom.api.dto.CardInput
 import edu.csumb.magicshroom.api.dto.CardPatch
 import edu.csumb.magicshroom.api.dto.PageResponse
@@ -45,6 +46,10 @@ class CardController(private val cardService: CardService) {
 	/** One card. Public. */
 	@GetMapping("/{cardId}")
 	fun get(@PathVariable @Min(1) cardId: Long): Card = cardService.get(cardId)
+
+	/** Fetches up to one hundred cards in one public request. */
+	@PostMapping("/batch")
+	fun batch(@Valid @RequestBody request: CardBatchRequest): List<Card> = cardService.getBatch(request.cardIds)
 
 	/** Creates a card and returns it with a `Location` header. Admin only. */
 	@PostMapping

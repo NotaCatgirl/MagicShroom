@@ -33,6 +33,7 @@ import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.method.support.ModelAndViewContainer
 import java.util.UUID
+import java.sql.SQLException
 
 /** Allows the isolated mock profile to exercise its stub caller in route tests. */
 @Configuration
@@ -57,7 +58,16 @@ class SupabaseSecurity(
         val entryPoint = ProblemAuthenticationEntryPoint(json)
         return http.csrf { it.disable() }
             .authorizeHttpRequests {
-                it.requestMatchers(HttpMethod.GET, "/api/v1/cards", "/api/v1/cards/*", "/actuator/health").permitAll()
+                it.requestMatchers(HttpMethod.POST, "/api/v1/cards/batch").permitAll()
+                it.requestMatchers(
+                    HttpMethod.GET,
+                    "/api/v1/cards",
+                    "/api/v1/cards/*",
+                    "/actuator/health",
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                ).permitAll()
                     .anyRequest().authenticated()
             }
             .oauth2ResourceServer { it.jwt(Customizer.withDefaults()).authenticationEntryPoint(entryPoint) }
@@ -120,12 +130,14 @@ class SupabaseCurrentUserResolver(private val users: UserRepository) : HandlerMe
             ?: throw UnauthorizedException("Token has no email claim.")
         val displayName = (jwt.getClaimAsMap("user_metadata")?.get("full_name") as? String)
             ?.takeIf(String::isNotBlank) ?: email.substringBefore('@')
-        // A token issued before its Auth user was deleted still verifies until it expires; the insert
-        // then fails the auth.users foreign key, which means "no such account" rather than a server error.
         val user = try {
             users.findOrCreate(subject, email, displayName)
         } catch (exception: DataIntegrityViolationException) {
-            throw UnauthorizedException("This account no longer exists. Sign in again.")
+            val isMissingAuthIdentity = generateSequence<Throwable>(exception) { it.cause }
+                .filterIsInstance<SQLException>()
+                .any { it.sqlState == "23503" }
+            if (isMissingAuthIdentity) throw UnauthorizedException("This account no longer exists. Sign in again.")
+            throw exception
         }
         return CurrentUser(user.id, user.role)
     }

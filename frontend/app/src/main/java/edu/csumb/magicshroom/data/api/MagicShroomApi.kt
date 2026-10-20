@@ -30,6 +30,10 @@ interface MagicShroomApi {
     @GET("api/v1/cards/{cardId}")
     suspend fun getCard(@Path("cardId") cardId: Long): CardDto
 
+    /** Fetches up to one hundred full card records in one public request. */
+    @POST("api/v1/cards/batch")
+    suspend fun getCardsBatch(@Body request: CardBatchRequestDto): List<CardDto>
+
     /** Creates a card. Admin only. */
     @POST("api/v1/cards")
     suspend fun createCard(@Body card: CardInputDto): CardDto

@@ -1,6 +1,5 @@
 package edu.csumb.magicshroom.api.service
 
-import edu.csumb.magicshroom.api.auth.AuthAccountDeleter
 import edu.csumb.magicshroom.api.auth.CurrentUser
 import edu.csumb.magicshroom.api.dto.PageResponse
 import edu.csumb.magicshroom.api.dto.UserPatch
@@ -16,12 +15,11 @@ import org.springframework.transaction.annotation.Transactional
 
 /** User accounts: the caller's own account, and admin-only management of everyone's. */
 @Service
-@Transactional
 class UserService(
 	private val userRepository: UserRepository,
 	private val deckRepository: DeckRepository,
 	private val deckCardRepository: DeckCardRepository,
-	private val authAccounts: AuthAccountDeleter,
+	private val authAdminClient: SupabaseAuthAdminClient,
 ) {
 	/** One page of users in id order, optionally only those with [role]. Admin only. */
 	@Transactional(readOnly = true)
@@ -42,6 +40,7 @@ class UserService(
 	}
 
 	/** Grants or revokes the ADMIN role. Admin only; 409 if it would leave no admin. */
+	@Transactional
 	fun updateRole(user: CurrentUser, userId: Long, patch: UserPatch): User {
 		user.requireAdmin()
 		val target = find(userId)
@@ -60,9 +59,10 @@ class UserService(
 
 	private fun purge(target: User) {
 		if (target.role == Role.ADMIN) requireAnotherAdmin()
-		// Delete the Supabase Auth user before writing anything here: its foreign key cascades to
-		// app_users, decks and deck_cards, and this transaction must not hold locks on those rows yet.
-		userRepository.findAuthUserId(target.id)?.let(authAccounts::delete)
+		val authUserId = userRepository.findAuthUserIdById(target.id)
+			?: throw NotFoundException("User ${target.id} was not found.")
+		// Supabase Auth deletion cascades through the PostgreSQL account and its owned data.
+		authAdminClient.deleteUser(authUserId)
 		deckRepository.findByUserId(target.id).forEach { deck ->
 			deckCardRepository.deleteByDeckId(deck.id)
 			deckRepository.deleteById(deck.id)

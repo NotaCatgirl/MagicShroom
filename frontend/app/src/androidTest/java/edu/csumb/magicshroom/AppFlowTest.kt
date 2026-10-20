@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import edu.csumb.magicshroom.data.auth.DemoAuthRepository
 import edu.csumb.magicshroom.ui.account.UserTestTags
 import edu.csumb.magicshroom.ui.login.LoginTestTags
@@ -24,13 +25,16 @@ class AppFlowTest {
     fun publicSearchCanOpenSignInAndAccount() {
         composeRule.setContent {
             MagicShroomTheme {
-                AppNavHost()
+                AppNavHost(authRepository = DemoAuthRepository())
             }
         }
 
         composeRule.onNodeWithTag(SearchTestTags.SCREEN).assertIsDisplayed()
         composeRule.onNodeWithTag(SearchTestTags.ACCOUNT).performClick()
         composeRule.onNodeWithTag(LoginTestTags.EMAIL).assertIsDisplayed()
+        composeRule.onNodeWithTag(LoginTestTags.GOOGLE).assertIsDisplayed()
+        composeRule.onNodeWithTag(LoginTestTags.EMAIL).performTextInput(DemoAuthRepository.TEST_EMAIL)
+        composeRule.onNodeWithTag(LoginTestTags.PASSWORD).performTextInput(DemoAuthRepository.TEST_PASSWORD)
         composeRule.onNodeWithTag(LoginTestTags.SUBMIT).performClick()
 
         composeRule.onNodeWithTag(UserTestTags.SCREEN).assertIsDisplayed()
@@ -38,5 +42,8 @@ class AppFlowTest {
         composeRule.onNodeWithText("User").assertIsDisplayed()
         composeRule.onNodeWithTag(UserTestTags.BACK).performClick()
         composeRule.onNodeWithTag(SearchTestTags.SCREEN).assertIsDisplayed()
+        composeRule.onNodeWithTag(SearchTestTags.ACCOUNT).performClick()
+        composeRule.onNodeWithTag(UserTestTags.SIGN_OUT).performClick()
+        composeRule.onNodeWithTag(LoginTestTags.SUBMIT).assertIsDisplayed()
     }
 }
