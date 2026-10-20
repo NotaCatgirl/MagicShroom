@@ -253,7 +253,7 @@ class SupabasePostgresAuthIntegrationTest {
             registry.add("spring.datasource.username") { postgres.getUsername() }
             registry.add("spring.datasource.password") { postgres.getPassword() }
             registry.add("magicshroom.auth.issuer", ::issuerUrl)
-            registry.add("magicshroom.auth.admin-key") { "test-admin-key" }
+            registry.add("magicshroom.auth.secret-key") { "test-admin-key" }
         }
 
         /** Returns the mock Supabase Auth issuer shared by the test JWTs and API decoder. */

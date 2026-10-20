@@ -5,6 +5,9 @@ import edu.csumb.magicshroom.data.api.BearerTokenInterceptor
 import edu.csumb.magicshroom.data.api.createMagicShroomApi
 import edu.csumb.magicshroom.data.auth.SupabaseAuthRepository
 import edu.csumb.magicshroom.data.repository.CardRepository
+import edu.csumb.magicshroom.data.api.StubAuthInterceptor
+import edu.csumb.magicshroom.data.repository.ApiUserRepository
+import edu.csumb.magicshroom.data.repository.UserRepository
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.createSupabaseClient
@@ -29,6 +32,10 @@ class AppContainer {
     val authRepository = SupabaseAuthRepository(supabase)
 
     private val okHttpClient = OkHttpClient.Builder()
+        .apply {
+            // Debug-only mock profile support; production auth still attaches the Supabase token.
+            if (BuildConfig.STUB_USER_ID.isNotBlank()) addInterceptor(StubAuthInterceptor(BuildConfig.STUB_USER_ID))
+        }
         .addInterceptor(BearerTokenInterceptor(authRepository::accessToken))
         .addInterceptor(
             HttpLoggingInterceptor().apply {
@@ -42,4 +49,7 @@ class AppContainer {
 
     /** Card catalog calls, authenticated with the current Supabase access token. */
     val cardRepository = CardRepository(api)
+
+    /** The signed-in user's account and admin user management. */
+    val userRepository: UserRepository = ApiUserRepository(api)
 }
