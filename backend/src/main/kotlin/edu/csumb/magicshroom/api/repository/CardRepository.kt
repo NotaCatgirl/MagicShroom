@@ -21,6 +21,9 @@ interface CardRepository {
 	/** The card with [id], or null. */
 	fun findById(id: Long): Card?
 
+	/** Returns the existing cards matching [ids]; implementations may fetch them in one query. */
+	fun findByIds(ids: List<Long>): List<Card> = ids.distinct().mapNotNull(::findById)
+
 	/** The card with this MTGJSON [uuid], or null. */
 	fun findByUuid(uuid: UUID): Card?
 

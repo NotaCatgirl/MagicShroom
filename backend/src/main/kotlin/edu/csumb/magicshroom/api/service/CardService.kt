@@ -34,11 +34,22 @@ class CardService(
 	fun get(cardId: Long): Card =
 		cardRepository.findById(cardId) ?: throw NotFoundException("Card $cardId was not found.")
 
+	/** Returns distinct requested cards in request order, with one 404 listing any missing IDs. */
+	fun getBatch(cardIds: List<Long>): List<Card> {
+		if (cardIds.any { it <= 0 }) throw BadRequestException("Card IDs must be positive.")
+		val uniqueIds = cardIds.distinct()
+		val found = cardRepository.findByIds(uniqueIds).associateBy(Card::id)
+		val missing = uniqueIds.filterNot(found::containsKey)
+		if (missing.isNotEmpty()) throw NotFoundException("Cards not found: ${missing.joinToString(", ")}.")
+		return uniqueIds.map(found::getValue)
+	}
+
 	/** Adds a card to the catalog. Admin only; 409 if another card already has its uuid. */
 	fun create(user: CurrentUser, input: CardInput): Card {
 		user.requireAdmin()
 		requireUuidFree(input.uuid, exceptCardId = null)
-		return cardRepository.insert(input.toCard(id = 0))
+		val saved = cardRepository.insert(input.toCard(id = 0))
+		return get(saved.id)
 	}
 
 	/** Replaces every field of card [cardId]. Admin only; idempotent. */
@@ -46,7 +57,8 @@ class CardService(
 		user.requireAdmin()
 		get(cardId)
 		requireUuidFree(input.uuid, exceptCardId = cardId)
-		return cardRepository.update(input.toCard(id = cardId))
+		cardRepository.update(input.toCard(id = cardId))
+		return get(cardId)
 	}
 
 	/** Changes only the fields present in [patch]. Admin only; 400 if [patch] is empty. */
@@ -55,7 +67,8 @@ class CardService(
 		if (patch.isEmpty()) throw BadRequestException("Send at least one field to change.")
 		val card = get(cardId)
 		patch.uuid?.let { requireUuidFree(it, exceptCardId = cardId) }
-		return cardRepository.update(patch.applyTo(card))
+		cardRepository.update(patch.applyTo(card))
+		return get(cardId)
 	}
 
 	/** Deletes card [cardId]. Admin only; 409 while any deck still contains it. */

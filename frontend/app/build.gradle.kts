@@ -42,6 +42,9 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "API_BASE_URL", "\"${backendUrl.trimEnd('/')}/\"")
+            // Optional -PstubUserId=1 (admin) / 2 (user): acts as that mock-profile user. Blank sends nothing.
+            val stubUserId = providers.gradleProperty("stubUserId").orElse("").get()
+            buildConfigField("String", "STUB_USER_ID", "\"$stubUserId\"")
         }
         release {
             optimization {
@@ -49,6 +52,7 @@ android {
             }
             isMinifyEnabled = false
             buildConfigField("String", "API_BASE_URL", "\"${backendUrl.trimEnd('/')}/\"")
+            buildConfigField("String", "STUB_USER_ID", "\"\"")
         }
     }
     compileOptions {
@@ -76,6 +80,8 @@ dependencies {
     implementation(libs.retrofit.converter.kotlinx.serialization)
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     testImplementation(libs.junit)
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.kotlinx.coroutines.test)

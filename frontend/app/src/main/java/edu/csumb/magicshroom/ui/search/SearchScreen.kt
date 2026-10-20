@@ -10,15 +10,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -38,6 +40,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -45,6 +50,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -56,6 +62,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil3.compose.AsyncImage
 import edu.csumb.magicshroom.data.api.CardDto
 import edu.csumb.magicshroom.ui.components.MagicShroomLogo
 import edu.csumb.magicshroom.ui.theme.AppBackground
@@ -73,12 +80,14 @@ object SearchTestTags {
     const val RESULTS = "search_results"
     const val LOAD_MORE = "search_load_more"
     const val RETRY = "search_retry"
+    const val CARD = "search_card_"
 }
 
-/** Searches the public card catalog and displays the results without a card detail page. */
+/** Searches the public card catalog and displays a gallery of card images. */
 @Composable
 fun SearchScreen(
     onAccountClick: () -> Unit,
+    onCardClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     canAccessBackend: Boolean = true,
     onRequestLocalNetworkPermission: () -> Unit = {},
@@ -98,6 +107,7 @@ fun SearchScreen(
             onAccountClick = onAccountClick,
             isSignedIn = isSignedIn,
             onLoginClick = onLoginClick,
+            onCardClick = onCardClick,
             modifier = modifier,
         )
     } else {
@@ -111,6 +121,7 @@ fun SearchScreen(
             onAccountClick = onAccountClick,
             isSignedIn = isSignedIn,
             onLoginClick = onLoginClick,
+            onCardClick = onCardClick,
             modifier = modifier,
             needsLocalNetworkPermission = true,
             onRequestLocalNetworkPermission = onRequestLocalNetworkPermission,
@@ -129,6 +140,7 @@ fun SearchContent(
     onRetry: () -> Unit,
     onLoadMore: () -> Unit,
     onAccountClick: () -> Unit,
+    onCardClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     needsLocalNetworkPermission: Boolean = false,
     onRequestLocalNetworkPermission: () -> Unit = {},
@@ -217,15 +229,17 @@ fun SearchContent(
                 ),
             )
 
-            LazyColumn(
+            LazyVerticalGrid(
                 modifier = Modifier
                     .fillMaxSize()
                     .testTag(SearchTestTags.RESULTS),
+                columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(top = 26.dp, bottom = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 when {
-                    needsLocalNetworkPermission -> item {
+                    needsLocalNetworkPermission -> item(span = { GridItemSpan(maxLineSpan) }) {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             Text(
                                 "Allow local network access to search cards on the emulator. " +
@@ -238,10 +252,10 @@ fun SearchContent(
                         }
                     }
                     state.isLoading -> items(2) { SearchResultPlaceholder() }
-                    state.errorMessage != null -> item {
+                    state.errorMessage != null -> item(span = { GridItemSpan(maxLineSpan) }) {
                         SearchError(message = state.errorMessage, onRetry = onRetry)
                     }
-                    state.cards.isEmpty() -> item {
+                    state.cards.isEmpty() -> item(span = { GridItemSpan(maxLineSpan) }) {
                         Text(
                             text = if (query.isBlank()) "No cards are available yet."
                             else "No cards match \"${query.trim()}\".",
@@ -249,7 +263,7 @@ fun SearchContent(
                         )
                     }
                     else -> {
-                        item {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
                             Text(
                                 "Showing ${state.cards.size} of ${state.totalCards} cards",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -257,17 +271,17 @@ fun SearchContent(
                             )
                         }
                         items(state.cards, key = { it.id }) { card ->
-                            SearchResultRow(card)
+                            SearchCardTile(card, onClick = { onCardClick(card.id) })
                         }
-                        if (state.isLoadingMore) item {
+                        if (state.isLoadingMore) item(span = { GridItemSpan(maxLineSpan) }) {
                             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                 CircularProgressIndicator(color = BrandPurple)
                             }
                         }
-                        if (state.loadMoreErrorMessage != null) item {
+                        if (state.loadMoreErrorMessage != null) item(span = { GridItemSpan(maxLineSpan) }) {
                             SearchError(message = state.loadMoreErrorMessage, onRetry = onLoadMore)
                         }
-                        if (state.hasMore && !state.isLoadingMore && state.loadMoreErrorMessage == null) item {
+                        if (state.hasMore && !state.isLoadingMore && state.loadMoreErrorMessage == null) item(span = { GridItemSpan(maxLineSpan) }) {
                             OutlinedButton(
                                 onClick = onLoadMore,
                                 modifier = Modifier
@@ -276,6 +290,13 @@ fun SearchContent(
                             ) {
                                 Text("Load more")
                             }
+                        }
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Text(
+                                "MagicShroom is unofficial fan content. Card images and related materials are © Wizards of the Coast LLC; this app is not endorsed by Wizards.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                         }
                     }
                 }
@@ -294,35 +315,44 @@ private fun SearchError(message: String, onRetry: () -> Unit) {
     }
 }
 
+/** Renders one card scan with a text fallback when the image is missing or unavailable. */
 @Composable
-private fun SearchResultRow(card: CardDto) {
-    Row(
+private fun SearchCardTile(card: CardDto, onClick: () -> Unit) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 104.dp)
             .background(Color.White, RoundedCornerShape(17.dp))
             .border(1.dp, BorderLavender, RoundedCornerShape(17.dp))
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+            .testTag(SearchTestTags.CARD + card.id)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        val imageUrl = card.imageFaces.firstOrNull()?.smallUrl
+        var imageFailed by remember(imageUrl) { mutableStateOf(false) }
         Box(
             modifier = Modifier
-                .size(width = 56.dp, height = 72.dp)
+                .fillMaxWidth()
+                .aspectRatio(0.714f)
                 .background(
                     Brush.verticalGradient(listOf(BrandPurple, BrandPurple.copy(alpha = 0.45f))),
                     RoundedCornerShape(10.dp),
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = card.cardName.firstOrNull()?.uppercaseChar()?.toString().orEmpty(),
-                color = Color.White,
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Medium,
-            )
+            if (imageUrl != null && !imageFailed) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "${card.cardName} card",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
+                    onError = { imageFailed = true },
+                )
+            } else {
+                Text(card.cardName, color = Color.White, modifier = Modifier.padding(10.dp))
+            }
         }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
             Text(
                 text = card.cardName,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -330,22 +360,7 @@ private fun SearchResultRow(card: CardDto) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            val type = (card.supertypes + card.types).joinToString(" ")
-            val subtype = card.subtypes.joinToString(" ")
-            Text(
-                text = listOf(type, subtype).filter(String::isNotBlank).joinToString(" • ").ifEmpty { "Card" },
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        card.manaCost?.takeIf(String::isNotBlank)?.let { cost ->
-            Text(
-                text = cost,
-                color = BrandPurple,
-                style = MaterialTheme.typography.labelMedium,
-            )
+            card.manaCost?.takeIf(String::isNotBlank)?.let { Text(it, color = BrandPurple, style = MaterialTheme.typography.labelSmall) }
         }
     }
 }
@@ -468,6 +483,7 @@ private fun SearchScreenPreview() {
             onRetry = {},
             onLoadMore = {},
             onAccountClick = {},
+            onCardClick = {},
         )
     }
 }

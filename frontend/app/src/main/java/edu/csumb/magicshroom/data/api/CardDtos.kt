@@ -30,7 +30,12 @@ data class CardDto(
     val legalities: List<CardLegalityDto> = emptyList(),
     val purchaseUrls: List<PurchaseUrlDto> = emptyList(),
     val rulings: List<RulingDto> = emptyList(),
+    val imageFaces: List<CardImageFaceDto> = emptyList(),
 )
+
+/** A full-card scan from the representative printing, in display order. */
+@Serializable
+data class CardImageFaceDto(val name: String, val smallUrl: String, val normalUrl: String)
 
 /** A card's name and text in another language. */
 @Serializable
@@ -97,3 +102,7 @@ data class PageMetaDto(val size: Int, val number: Int, val totalElements: Long, 
 /** One page of cards (`CardPage`). */
 @Serializable
 data class CardPageDto(val content: List<CardDto>, val page: PageMetaDto)
+
+/** Body of POST /api/v1/cards/batch; the API accepts one to one hundred card IDs. */
+@Serializable
+data class CardBatchRequestDto(val cardIds: List<Long>)

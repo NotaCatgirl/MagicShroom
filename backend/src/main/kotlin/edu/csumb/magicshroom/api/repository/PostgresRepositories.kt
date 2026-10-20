@@ -19,7 +19,7 @@ import java.util.UUID
 @Repository
 @Profile("!mock")
 class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: JsonMapper) : CardRepository {
-    private val columns = "id, uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings"
+    private val columns = "id, uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings, (select faces from card_images where oracle_id = cards.scryfall_oracle_id) as image_faces"
     private val fields = "uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings"
     private val values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb"
     private val mapper = RowMapper { rs: ResultSet, _: Int ->
@@ -38,6 +38,7 @@ class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: J
             legalities = json.readValue(rs.getString("legalities")),
             purchaseUrls = json.readValue(rs.getString("purchase_urls")),
             rulings = json.readValue(rs.getString("rulings")),
+            imageFaces = rs.getString("image_faces")?.let { json.readValue(it) } ?: emptyList(),
         )
     }
 
@@ -78,6 +79,14 @@ class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: J
 
     /** Finds a card by numeric API id. */
     override fun findById(id: Long): Card? = jdbc.query("select $columns from cards where id = ?", mapper, id).firstOrNull()
+
+    /** Fetches a bounded set of cards with a single PostgreSQL query. */
+    override fun findByIds(ids: List<Long>): List<Card> {
+        val uniqueIds = ids.distinct()
+        if (uniqueIds.isEmpty()) return emptyList()
+        val placeholders = uniqueIds.joinToString(",") { "?" }
+        return jdbc.query("select $columns from cards where id in ($placeholders)", mapper, *uniqueIds.toTypedArray())
+    }
 
     /** Finds a card by its stable archive UUID. */
     override fun findByUuid(uuid: UUID): Card? = jdbc.query("select $columns from cards where uuid = ?", mapper, uuid).firstOrNull()
@@ -129,6 +138,31 @@ class PostgresUserRepository(private val jdbc: JdbcTemplate) : UserRepository {
 
     /** Finds a user by the API's numeric id. */
     override fun findById(id: Long): User? = jdbc.query("select id, email, display_name, role from app_users where id = ?", mapper, id).firstOrNull()
+
+    /** Pages users in id order in PostgreSQL, optionally filtered by role. */
+    override fun findPage(role: Role?, page: Int, size: Int): PageResponse<User> {
+        val where = if (role == null) "" else " where role = ?"
+        val args: List<Any> = listOfNotNull(role?.name)
+        val total = jdbc.queryForObject("select count(*) from app_users$where", Long::class.java, *args.toTypedArray()) ?: 0L
+        val rows = jdbc.query("select id, email, display_name, role from app_users$where order by id limit ? offset ?", mapper,
+            *(args + listOf(size, page.toLong() * size)).toTypedArray())
+        return PageResponse(rows, PageMeta(size, page, total, ((total + size - 1) / size).toInt()))
+    }
+
+    /** Counts users with one role, e.g. to keep at least one admin. */
+    override fun countByRole(role: Role): Long =
+        jdbc.queryForObject("select count(*) from app_users where role = ?", Long::class.java, role.name) ?: 0L
+
+    /** Changes a user's role and returns the updated row. */
+    override fun updateRole(id: Long, role: Role): User? =
+        jdbc.query("update app_users set role = ? where id = ? returning id, email, display_name, role", mapper, role.name, id).firstOrNull()
+
+    /** Returns the Supabase Auth identity which owns the application account. */
+    override fun findAuthUserIdById(id: Long): UUID? = jdbc.query(
+        "select auth_user_id from app_users where id = ?",
+        { rs, _ -> rs.getObject("auth_user_id", UUID::class.java) },
+        id,
+    ).firstOrNull()
 
     /** Creates an application account for an Auth subject on first valid request. */
     override fun findOrCreate(authUserId: UUID, email: String, displayName: String): User =

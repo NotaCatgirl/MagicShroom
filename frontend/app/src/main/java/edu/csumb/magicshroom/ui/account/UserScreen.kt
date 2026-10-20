@@ -4,22 +4,23 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -57,9 +58,13 @@ object UserTestTags {
     const val SCREEN = "user_screen"
     const val BACK = "user_back"
     const val SIGN_OUT = "user_sign_out"
+    const val ADMIN = "user_admin"
 }
 
-/** Displays basic read-only information for the signed-in user. */
+/**
+ * Displays signed-in account information, a sign-out action, and admin tools when the server
+ * confirms that the signed-in user has the ADMIN role.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserScreen(
@@ -68,6 +73,7 @@ fun UserScreen(
     onSignOut: suspend () -> Unit,
     errorMessage: String? = null,
     modifier: Modifier = Modifier,
+    onAdminClick: (() -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
     var isSigningOut by remember { mutableStateOf(false) }
@@ -175,6 +181,20 @@ fun UserScreen(
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                     color = MaterialTheme.colorScheme.error,
                 )
+            }
+
+            if (onAdminClick != null) {
+                Button(
+                    onClick = onAdminClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp)
+                        .height(52.dp)
+                        .testTag(UserTestTags.ADMIN),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Text("Admin tools", fontSize = 18.sp)
+                }
             }
         }
     }

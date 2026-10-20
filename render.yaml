@@ -1,10 +1,13 @@
 services:
   - type: web
     name: magicshroom-api
-    runtime: docker
+    runtime: image
     plan: free
-    dockerfilePath: backend/Dockerfile
-    dockerContext: backend
+    image:
+      url: ghcr.io/notacatgirl/magicshroom-api:main
+      creds:
+        fromRegistryCreds:
+          name: ghcr-read
     healthCheckPath: /actuator/health
     envVars:
       - key: DATABASE_URL
@@ -14,4 +17,6 @@ services:
       - key: DATABASE_PASSWORD
         sync: false
       - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_AUTH_ADMIN_KEY
         sync: false

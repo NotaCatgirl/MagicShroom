@@ -7,7 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 @OptIn(kotlin.time.ExperimentalTime::class)
-class GoogleAuthRepositoryTest {
+class SupabaseAuthRepositoryTest {
     @Test
     fun profileUsesGoogleDisplayNameAndEmail() {
         val user = UserInfo(

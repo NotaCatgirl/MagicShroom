@@ -1,10 +1,15 @@
 # MagicShroom Android app
 
-The Compose app opens a public card search with the MagicShroom logo above the search bar.
-Guests can search and see cards without signing in. The top-right Log in button opens Google
-sign-in through Supabase Auth; signed-in users get an Account button with profile information
-and sign-out. There is no email/password or demo-account login. Search uses the backend's public
-`GET /api/v1/cards` endpoint; card details and deck actions are not connected to this screen yet.
+The Compose app opens a public searchable card gallery with the MagicShroom logo above the
+search bar. Guests can search and open card details without signing in. Card data and image URLs
+come from the backend's public card endpoints; the app loads scans from Scryfall. Configure the
+backend and its Scryfall image metadata import as described in [`backend/README.md`](../backend/README.md).
+
+The top-right Log in button opens Google sign-in through Supabase Auth. Signed-in users get an
+Account button with read-only profile information and sign-out. Admin tools are available only
+when the backend confirms the signed-in user has the ADMIN role; the backend enforces admin
+permissions. There is no email/password or demo-account login. Deck actions are not connected
+to the search screen yet.
 
 Open `frontend/` in Android Studio. The build reads these public Auth settings from the ignored
 `.env` in the repository root:

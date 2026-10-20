@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
         !requiresEmulatorNetworkPermission(BuildConfig.BACKEND_URL, Build.VERSION.SDK_INT, BuildConfig.DEBUG) ||
             checkSelfPermission(Manifest.permission.ACCESS_LOCAL_NETWORK) == PackageManager.PERMISSION_GRANTED
 
-    /** Keeps the existing Supabase OAuth callback ready for the future real sign-in flow. */
+    /** Delivers OAuth callbacks to the process-shared Supabase client. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)

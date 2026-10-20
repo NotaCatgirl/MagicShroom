@@ -1,5 +1,6 @@
 package edu.csumb.magicshroom.api.auth
 
+import edu.csumb.magicshroom.api.dto.PageResponse
 import edu.csumb.magicshroom.api.error.UnauthorizedException
 import edu.csumb.magicshroom.api.model.Role
 import edu.csumb.magicshroom.api.model.User
@@ -13,6 +14,7 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.context.request.ServletWebRequest
 import java.util.UUID
+import org.springframework.dao.DataIntegrityViolationException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -22,6 +24,16 @@ class SupabaseCurrentUserResolverTest {
     private val repository = object : UserRepository {
         /** Unused in this resolver test. */
         override fun findById(id: Long): User? = null
+
+        /** Unused in this resolver test. */
+        override fun findPage(role: Role?, page: Int, size: Int): PageResponse<User> = error("unused")
+
+        /** Unused in this resolver test. */
+        override fun countByRole(role: Role): Long = error("unused")
+
+        /** Unused in this resolver test. */
+        override fun updateRole(id: Long, role: Role): User? = error("unused")
+        override fun findAuthUserIdById(id: Long): UUID? = null
 
         /** Records the Auth subject handed to application account creation. */
         override fun findOrCreate(authUserId: UUID, email: String, displayName: String): User {
@@ -70,6 +82,25 @@ class SupabaseCurrentUserResolverTest {
         SecurityContextHolder.getContext().authentication = JwtAuthenticationToken(jwt)
         assertFailsWith<UnauthorizedException> {
             resolver.resolveArgument(parameter, null, ServletWebRequest(MockHttpServletRequest()), null)
+        }
+    }
+
+    /** A removed Supabase Auth identity must never be recreated by its still-unexpired JWT. */
+    @Test
+    fun `deleted auth identity cannot recreate application user`() {
+        val missingIdentityRepository = object : UserRepository by repository {
+            override fun findOrCreate(authUserId: UUID, email: String, displayName: String): User {
+                val sqlException = java.sql.SQLException("auth user missing", "23503")
+                throw DataIntegrityViolationException("missing auth user", sqlException)
+            }
+        }
+        val missingIdentityResolver = SupabaseCurrentUserResolver(missingIdentityRepository)
+        val jwt = Jwt.withTokenValue("token").header("alg", "RS256")
+            .subject(UUID.randomUUID().toString()).claim("email", "deleted@example.com").build()
+        SecurityContextHolder.getContext().authentication = JwtAuthenticationToken(jwt)
+
+        assertFailsWith<UnauthorizedException> {
+            missingIdentityResolver.resolveArgument(parameter, null, ServletWebRequest(MockHttpServletRequest()), null)
         }
     }
 

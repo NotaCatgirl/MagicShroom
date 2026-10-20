@@ -30,6 +30,10 @@ interface MagicShroomApi {
     @GET("api/v1/cards/{cardId}")
     suspend fun getCard(@Path("cardId") cardId: Long): CardDto
 
+    /** Fetches up to one hundred full card records in one public request. */
+    @POST("api/v1/cards/batch")
+    suspend fun getCardsBatch(@Body request: CardBatchRequestDto): List<CardDto>
+
     /** Creates a card. Admin only. */
     @POST("api/v1/cards")
     suspend fun createCard(@Body card: CardInputDto): CardDto
@@ -81,6 +85,30 @@ interface MagicShroomApi {
     /** Removes a card from one of my decks. */
     @DELETE("api/v1/decks/{deckId}/cards/{cardId}")
     suspend fun removeCardFromMyDeck(@Path("deckId") deckId: Long, @Path("cardId") cardId: Long)
+
+    /** The signed-in user's own account, including their role. */
+    @GET("api/v1/users/me")
+    suspend fun getMe(): UserDto
+
+    /** Deletes the signed-in user's account and all their data. */
+    @DELETE("api/v1/users/me")
+    suspend fun deleteMe()
+
+    /** One page of users, optionally only one role. Admin only. */
+    @GET("api/v1/users")
+    suspend fun listUsers(
+        @Query("role") role: Role? = null,
+        @Query("page") page: Int? = null,
+        @Query("size") size: Int? = null,
+    ): UserPageDto
+
+    /** One user. Admin only. */
+    @GET("api/v1/users/{userId}")
+    suspend fun getUser(@Path("userId") userId: Long): UserDto
+
+    /** Grants or revokes the ADMIN role. Admin only. */
+    @PATCH("api/v1/users/{userId}")
+    suspend fun updateUserRole(@Path("userId") userId: Long, @Body patch: UserRolePatchDto): UserDto
 
     /** Deletes a user and all their data. Admin only. */
     @DELETE("api/v1/users/{userId}")

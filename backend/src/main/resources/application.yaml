@@ -14,5 +14,7 @@ server:
 magicshroom:
   auth:
     issuer: ${SUPABASE_URL}/auth/v1
+    # Server-only Supabase key used for Auth Admin API calls.
+    admin-key: ${SUPABASE_AUTH_ADMIN_KEY:${SUPABASE_SECRET_KEY:}}
   stub-auth:
     default-user-id: 2
