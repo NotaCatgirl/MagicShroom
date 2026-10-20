@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -54,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.csumb.magicshroom.data.api.CardDto
+import edu.csumb.magicshroom.ui.components.MagicShroomLogo
 import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BorderLavender
 import edu.csumb.magicshroom.ui.theme.BrandPurple
@@ -64,6 +68,7 @@ import edu.csumb.magicshroom.ui.theme.MagicShroomTheme
 object SearchTestTags {
     const val SCREEN = "search_screen"
     const val ACCOUNT = "search_account"
+    const val LOGIN = "search_login"
     const val FIELD = "search_field"
     const val RESULTS = "search_results"
     const val LOAD_MORE = "search_load_more"
@@ -77,6 +82,8 @@ fun SearchScreen(
     modifier: Modifier = Modifier,
     canAccessBackend: Boolean = true,
     onRequestLocalNetworkPermission: () -> Unit = {},
+    isSignedIn: Boolean = false,
+    onLoginClick: () -> Unit = {},
 ) {
     if (canAccessBackend) {
         val viewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory)
@@ -89,6 +96,8 @@ fun SearchScreen(
             onRetry = viewModel::retry,
             onLoadMore = viewModel::loadMore,
             onAccountClick = onAccountClick,
+            isSignedIn = isSignedIn,
+            onLoginClick = onLoginClick,
             modifier = modifier,
         )
     } else {
@@ -100,6 +109,8 @@ fun SearchScreen(
             onRetry = {},
             onLoadMore = {},
             onAccountClick = onAccountClick,
+            isSignedIn = isSignedIn,
+            onLoginClick = onLoginClick,
             modifier = modifier,
             needsLocalNetworkPermission = true,
             onRequestLocalNetworkPermission = onRequestLocalNetworkPermission,
@@ -121,28 +132,41 @@ fun SearchContent(
     modifier: Modifier = Modifier,
     needsLocalNetworkPermission: Boolean = false,
     onRequestLocalNetworkPermission: () -> Unit = {},
+    isSignedIn: Boolean = false,
+    onLoginClick: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier.testTag(SearchTestTags.SCREEN),
         containerColor = AppBackground,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Search cards", fontSize = 26.sp) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White),
+                title = {},
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = AppBackground),
                 actions = {
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 18.dp)
-                            .size(48.dp)
-                            .semantics { contentDescription = "Account" }
-                            .testTag(SearchTestTags.ACCOUNT)
-                            .clickable(role = Role.Button, onClick = onAccountClick),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        AccountOutlineIcon(
-                            modifier = Modifier.size(27.dp),
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
+                    if (isSignedIn) {
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 18.dp)
+                                .size(48.dp)
+                                .semantics { contentDescription = "Account" }
+                                .testTag(SearchTestTags.ACCOUNT)
+                                .clickable(role = Role.Button, onClick = onAccountClick),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            AccountOutlineIcon(
+                                modifier = Modifier.size(27.dp),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    } else {
+                        TextButton(
+                            onClick = onLoginClick,
+                            modifier = Modifier.padding(end = 16.dp).testTag(SearchTestTags.LOGIN),
+                        ) {
+                            LoginOutlineIcon(modifier = Modifier.size(24.dp), color = BrandPurple)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Log in")
+                        }
                     }
                 },
             )
@@ -153,8 +177,10 @@ fun SearchContent(
                 .fillMaxSize()
                 .padding(contentPadding)
                 .padding(horizontal = 24.dp)
-                .padding(top = 28.dp),
+                .padding(top = 8.dp),
         ) {
+            MagicShroomLogo(modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(28.dp))
             OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChange,
@@ -374,6 +400,20 @@ private fun SearchOutlineIcon(modifier: Modifier, color: Color) {
             end = Offset(size.width * 0.9f, size.height * 0.9f),
             strokeWidth = 2.dp.toPx(),
         )
+    }
+}
+
+@Composable
+private fun LoginOutlineIcon(modifier: Modifier, color: Color) {
+    Canvas(modifier = modifier) {
+        val strokeWidth = 2.dp.toPx()
+        // Door frame and an arrow entering from the left.
+        drawLine(color, Offset(size.width * 0.55f, size.height * 0.15f), Offset(size.width * 0.85f, size.height * 0.15f), strokeWidth)
+        drawLine(color, Offset(size.width * 0.85f, size.height * 0.15f), Offset(size.width * 0.85f, size.height * 0.85f), strokeWidth)
+        drawLine(color, Offset(size.width * 0.55f, size.height * 0.85f), Offset(size.width * 0.85f, size.height * 0.85f), strokeWidth)
+        drawLine(color, Offset(size.width * 0.1f, size.height * 0.5f), Offset(size.width * 0.62f, size.height * 0.5f), strokeWidth)
+        drawLine(color, Offset(size.width * 0.4f, size.height * 0.28f), Offset(size.width * 0.62f, size.height * 0.5f), strokeWidth)
+        drawLine(color, Offset(size.width * 0.4f, size.height * 0.72f), Offset(size.width * 0.62f, size.height * 0.5f), strokeWidth)
     }
 }
 

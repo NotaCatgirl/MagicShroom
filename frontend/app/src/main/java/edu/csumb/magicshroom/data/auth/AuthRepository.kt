@@ -1,23 +1,28 @@
 package edu.csumb.magicshroom.data.auth
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+
 /** Basic information about the signed-in user. */
 data class UserProfile(
     val email: String,
     val displayName: String,
-    val role: String,
 )
 
-/** The authentication state used by the app's screens. */
-data class AuthSession(
-    val user: UserProfile,
-)
+/** Session state for optional sign-in and access to account information. */
+sealed interface AuthState {
+    data object Loading : AuthState
+    data object SignedOut : AuthState
+    data class SignedIn(val user: UserProfile) : AuthState
+}
 
-/** Authentication boundary that can later be implemented with Supabase. */
+/** Authentication boundary; screens do not handle OAuth tokens themselves. */
 interface AuthRepository {
-    val currentSession: AuthSession?
+    val authState: Flow<AuthState>
+    val errorMessage: StateFlow<String?>
 
-    /** Returns a session when the supplied credentials are accepted. */
-    suspend fun signIn(email: String, password: String): AuthSession?
-
-    fun signOut()
+    /** Opens the Google flow. Completion is reported later through [authState]. */
+    suspend fun signInWithGoogle()
+    suspend fun signOut()
+    fun clearError()
 }

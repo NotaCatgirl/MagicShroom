@@ -25,9 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import edu.csumb.magicshroom.ui.nav.AppNavHost
 import edu.csumb.magicshroom.ui.theme.MagicShroomTheme
-import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.handleDeeplinks
-import io.github.jan.supabase.createSupabaseClient
 
 /** Hosts the app's login, search, and account navigation flow. */
 class MainActivity : ComponentActivity() {
@@ -36,21 +34,17 @@ class MainActivity : ComponentActivity() {
         localNetworkGranted = it
     }
 
-    // Kept ready for the real AuthRepository implementation in the next authentication milestone.
-    private val supabase by lazy {
-        createSupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY) {
-            install(Auth) { scheme = "magicshroom"; host = "auth" }
-        }
-    }
+    private val container get() = (application as MagicShroomApplication).container
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        supabase.handleDeeplinks(intent)
+        handleAuthCallback(intent)
         localNetworkGranted = hasLocalNetworkAccess()
         setContent {
             MagicShroomTheme {
                 AppNavHost(
+                    authRepository = container.authRepository,
                     canAccessBackend = localNetworkGranted,
                     onRequestLocalNetworkPermission = {
                         localNetworkPermission.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
@@ -73,7 +67,13 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        supabase.handleDeeplinks(intent)
+        handleAuthCallback(intent)
+    }
+
+    private fun handleAuthCallback(intent: Intent) {
+        container.supabase.handleDeeplinks(intent, onError = {
+            container.authRepository.onCallbackError()
+        })
     }
 }
 

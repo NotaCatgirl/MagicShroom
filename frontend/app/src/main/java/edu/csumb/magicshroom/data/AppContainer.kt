@@ -2,7 +2,10 @@ package edu.csumb.magicshroom.data
 
 import edu.csumb.magicshroom.BuildConfig
 import edu.csumb.magicshroom.data.api.createMagicShroomApi
+import edu.csumb.magicshroom.data.auth.GoogleAuthRepository
 import edu.csumb.magicshroom.data.repository.CardRepository
+import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.createSupabaseClient
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 
@@ -11,6 +14,12 @@ import okhttp3.logging.HttpLoggingInterceptor
  * them through [edu.csumb.magicshroom.MagicShroomApplication.container]. Add new repositories here.
  */
 class AppContainer {
+    val supabase = createSupabaseClient(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY) {
+        install(Auth) { scheme = "magicshroom"; host = "auth" }
+    }
+
+    val authRepository = GoogleAuthRepository(supabase)
+
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(
             HttpLoggingInterceptor().apply {

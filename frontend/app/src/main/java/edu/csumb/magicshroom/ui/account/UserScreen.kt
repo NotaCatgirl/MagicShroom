@@ -4,6 +4,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,16 +14,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -39,11 +50,13 @@ import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BorderLavender
 import edu.csumb.magicshroom.ui.theme.BrandPurple
 import edu.csumb.magicshroom.ui.theme.MagicShroomTheme
+import kotlinx.coroutines.launch
 
 /** Stable identifiers used by the account Compose UI test. */
 object UserTestTags {
     const val SCREEN = "user_screen"
     const val BACK = "user_back"
+    const val SIGN_OUT = "user_sign_out"
 }
 
 /** Displays basic read-only information for the signed-in user. */
@@ -52,8 +65,12 @@ object UserTestTags {
 fun UserScreen(
     user: UserProfile,
     onBack: () -> Unit,
+    onSignOut: suspend () -> Unit,
+    errorMessage: String? = null,
     modifier: Modifier = Modifier,
 ) {
+    val scope = rememberCoroutineScope()
+    var isSigningOut by remember { mutableStateOf(false) }
     Scaffold(
         modifier = modifier.testTag(UserTestTags.SCREEN),
         containerColor = AppBackground,
@@ -90,6 +107,8 @@ fun UserScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding)
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
                 .padding(horizontal = 24.dp, vertical = 34.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -130,8 +149,32 @@ fun UserScreen(
                 UserInfoRow(label = "Display name", value = user.displayName)
                 HorizontalDivider(color = BorderLavender)
                 UserInfoRow(label = "Email", value = user.email)
-                HorizontalDivider(color = BorderLavender)
-                UserInfoRow(label = "Role", value = user.role.toDisplayRole())
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+            OutlinedButton(
+                onClick = {
+                    if (!isSigningOut) scope.launch {
+                        isSigningOut = true
+                        try {
+                            onSignOut()
+                        } finally {
+                            isSigningOut = false
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(54.dp).testTag(UserTestTags.SIGN_OUT),
+                enabled = !isSigningOut,
+            ) {
+                if (isSigningOut) CircularProgressIndicator(modifier = Modifier.size(22.dp))
+                else Text("Sign out")
+            }
+            if (errorMessage != null) {
+                Text(
+                    errorMessage,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
         }
     }
@@ -166,8 +209,6 @@ private fun initialsFor(displayName: String): String {
         .ifEmpty { "?" }
 }
 
-private fun String.toDisplayRole(): String = lowercase().replaceFirstChar { it.uppercaseChar() }
-
 @Composable
 private fun BackArrowIcon(modifier: Modifier, color: Color) {
     Canvas(modifier = modifier) {
@@ -199,11 +240,11 @@ private fun UserScreenPreview() {
     MagicShroomTheme {
         UserScreen(
             user = UserProfile(
-                email = "testEmail1@gmail.com",
-                displayName = "testUser1",
-                role = "USER",
+                email = "tony@example.com",
+                displayName = "Tony Tester",
             ),
             onBack = {},
+            onSignOut = {},
         )
     }
 }
