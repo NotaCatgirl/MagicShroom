@@ -14,8 +14,7 @@ server:
 magicshroom:
   auth:
     issuer: ${SUPABASE_URL}/auth/v1
-    # Server-only Supabase secret key (sb_secret_... or legacy service_role). Optional: without it,
-    # deleting a user removes their app data but not their Supabase Auth login.
-    secret-key: ${SUPABASE_SECRET_KEY:}
+    # Server-only Supabase key used for Auth Admin API calls.
+    admin-key: ${SUPABASE_AUTH_ADMIN_KEY:${SUPABASE_SECRET_KEY:}}
   stub-auth:
     default-user-id: 2

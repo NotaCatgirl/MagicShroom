@@ -37,6 +37,7 @@ class ApiExceptionHandler : ResponseEntityExceptionHandler() {
 			is ForbiddenException -> HttpStatus.FORBIDDEN
 			is NotFoundException -> HttpStatus.NOT_FOUND
 			is ConflictException -> HttpStatus.CONFLICT
+			is ServiceUnavailableException -> HttpStatus.SERVICE_UNAVAILABLE
 		}
 		return problem(status, ex.message, request)
 	}

@@ -20,3 +20,6 @@ class NotFoundException(message: String) : ApiException(message)
 
 /** 409: conflicts with existing data, such as a duplicate or a card still used by a deck. */
 class ConflictException(message: String) : ApiException(message)
+
+/** 503: a required external service is unavailable or not configured. */
+class ServiceUnavailableException(message: String) : ApiException(message)
