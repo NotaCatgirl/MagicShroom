@@ -10,6 +10,10 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-20-card-comparison-design.md`
 
+> **Status:** executed. Code review then added other-face exclusion, a cached similar list, darker
+> verdict colors, an "N/A" badge, and screen-reader wording, and the branch merged PR #53. The
+> code and the spec are the source of truth; the code blocks below are the original plan.
+
 **Conventions to keep:** Backend files use tabs except `PostgresRepositories.kt`, `SupabaseSecurity.kt`, and `SupabasePostgresAuthIntegrationTest.kt` (4 spaces). Frontend files use 4 spaces. Every public class and function gets a one-line KDoc, as the surrounding code does. Commit messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
 ---

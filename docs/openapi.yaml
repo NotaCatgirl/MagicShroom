@@ -252,9 +252,10 @@ paths:
       operationId: getSimilarCards
       summary: List cards similar to a card
       description: >-
-        Cards that share a main type with the card, best match first. Cards with the same color
-        identity come first, then cards sharing at least one color; within each, the closest mana
-        value, the most shared subtypes, and the most popular (lowest EDHREC rank) come first.
+        Cards that share a main type with the card, best match first, excluding the card's other
+        faces (rows with the same scryfallOracleId). Cards with the same color identity come first,
+        then cards sharing at least one color; within each, the closest mana value, the most shared
+        subtypes, and the most popular (lowest EDHREC rank) come first, with lower id breaking ties.
       security: []
       parameters:
         - name: limit

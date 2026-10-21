@@ -1,6 +1,6 @@
 # Card comparison: design
 
-Date: 2026-10-20 · Branch: `feature/card-comparison` · Status: approved design, pending spec review
+Date: 2026-10-20 · Branch: `feature/card-comparison` · Status: implemented (see the branch's commits)
 
 ## Goal
 
@@ -135,10 +135,12 @@ counts `uniqueToBase` plus `uniqueToOther`. NOT_COMPARABLE rows are shown but no
   - the two card images side by side (small scans), names under each;
   - the tally line;
   - the stat table: label, base value, verdict badge, other value;
-  - "Shared", "Unique to <base>", and "Unique to <other>" trait lists, each trait with a ★ badge.
+  - "Shared" (each trait marked =), "Unique to <base>", and "Unique to <other>" (each marked ★)
+    trait lists, each list read by screen readers as one item.
 - Verdict badge: icon + word + color: ▲ Better (green), ▼ Worse (red), = Equal (gray), ★ Unique
-  (brand purple), — Not comparable (gray). Each table row has a screen-reader description such as
-  "Power: Serra Angel 4, Baneslayer Angel 5, worse".
+  (brand purple), — N/A (gray; spoken as "not comparable"). Better and worse use dark green and red
+  so the text meets WCAG AA on its tinted pill. Each table row has a screen-reader description such
+  as "Power: Serra Angel 4, Baneslayer Angel 5, worse" ("—" is spoken as "none", "#65" as "rank 65").
 - Screens follow `CardDetailScreen`'s pattern (`remember` + `LaunchedEffect` + `ApiResult`, Retry on
   failure). The comparison screen loads both cards with `getCardsByIds`, which hits the cache that
   the similar list just filled.
@@ -148,11 +150,14 @@ counts `uniqueToBase` plus `uniqueToOther`. NOT_COMPARABLE rows are shown but no
 - `CardDto` gains `power`, `toughness`, `loyalty`, `edhrecRank`, all nullable with `null` defaults,
   so the app still parses responses from an older server.
 - `MagicShroomApi.getSimilarCards(cardId, limit)` calls the new route.
-  `CardRepository.getSimilarCards(cardId, limit = 10)` returns `ApiResult<List<CardDto>>` and caches
-  each card.
-- Loading shows a spinner. Failures show `userMessage` with Retry and Back.
-- An HTTP 404 from the similar route (a server without it, such as Render before redeploying) shows
-  "Comparisons need the latest server version." An empty list shows "No similar cards found."
+  `CardRepository.getSimilarCards(cardId, limit = 10)` returns `ApiResult<List<CardDto>>`, caches
+  each card, and remembers the list's ids per card and limit, so returning to the list from a
+  comparison makes no request.
+- Loading shows a spinner. Failures show `userMessage` with Retry (the top bar has Back).
+- The similar screen loads the base card first, so its own failure (such as 404 for an unknown
+  card) shows that card's message. After that, an HTTP 404 from the similar route means a server
+  without it, such as Render before redeploying, and shows "Comparisons need the latest server
+  version." An empty list shows "No similar cards found."
 
 ## 5. Testing
 
