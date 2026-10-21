@@ -2,6 +2,7 @@ package edu.csumb.magicshroom.ui.compare
 
 import edu.csumb.magicshroom.data.api.CardDto
 import edu.csumb.magicshroom.data.api.Color
+import edu.csumb.magicshroom.data.repository.ApiResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -108,6 +109,12 @@ class CardComparisonTest {
         assertEquals(listOf("Colorless"), comparison.uniqueToBase)
         assertEquals(listOf("Red"), comparison.uniqueToOther)
         assertNull(comparison.rows.firstOrNull { it.label == "Colors" })
+    }
+
+    @Test
+    fun `a 404 from the similar route asks for the latest server`() {
+        assertEquals("Comparisons need the latest server version.", similarCardsErrorMessage(ApiResult.HttpError(404, "No static resource")))
+        assertEquals("The server ran into a problem. Please try again.", similarCardsErrorMessage(ApiResult.HttpError(500, null)))
     }
 
     private fun card(
