@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -342,7 +341,10 @@ private fun SearchCardTile(card: CardDto, onClick: () -> Unit) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            card.manaCost?.takeIf(String::isNotBlank)?.let { Text(it, color = BrandPurple, style = MaterialTheme.typography.labelSmall) }
+            card.manaCost?.takeIf(String::isNotBlank)?.let { manaCost ->
+                Text("Mana cost", style = MaterialTheme.typography.labelSmall)
+                Text(manaCost, color = BrandPurple, style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }
