@@ -48,6 +48,12 @@ class CardRepository(private val api: MagicShroomApi) {
         return ApiResult.Success(resolved)
     }
 
+    /** Up to [limit] cards most like card [cardId], best first; cached so the comparison opens instantly. */
+    suspend fun getSimilarCards(cardId: Long, limit: Int = 10): ApiResult<List<CardDto>> =
+        apiCall { api.getSimilarCards(cardId, limit) }.also { result ->
+            if (result is ApiResult.Success) remember(result.data)
+        }
+
     /** Stores full card records in the process-wide repository cache by API ID. */
     private fun remember(cards: Iterable<CardDto>) {
         cards.forEach { cardsById[it.id] = it }
