@@ -60,6 +60,65 @@ class DeckRepositoryTest {
         assertEquals(2, server.requestCount)
     }
 
+    /** Exercises every deck mutation and verifies each Retrofit route and request body. */
+    @Test
+    fun `deck create detail rename and card mutations call expected routes`() = runTest {
+        server.enqueue(json(201, EMPTY_DECK))
+        server.enqueue(json(200, EMPTY_DECK_RENAMED))
+        server.enqueue(json(200, DECK_WITH_CARD))
+        server.enqueue(json(200, CARDS))
+        server.enqueue(json(201, """{"cardId":10,"quantity":2,"section":"MAINBOARD"}"""))
+        server.enqueue(json(200, """{"cardId":10,"quantity":3,"section":"SIDEBOARD"}"""))
+        server.enqueue(MockResponse().setResponseCode(204))
+        server.enqueue(MockResponse().setResponseCode(204))
+
+        assertTrue(repository.createDeck("  Burn  ") is ApiResult.Success)
+        assertTrue(repository.renameDeck(3, "  Burn v2  ") is ApiResult.Success)
+        val detail = repository.getMyDeckWithCards(3)
+        assertTrue(detail is ApiResult.Success)
+        assertEquals("Lightning Bolt", (detail as ApiResult.Success).data.cards.single().card.cardName)
+        assertTrue(repository.addCard(3, 10, 2, edu.csumb.magicshroom.data.api.DeckSection.MAINBOARD) is ApiResult.Success)
+        assertTrue(
+            repository.updateCard(
+                3,
+                10,
+                edu.csumb.magicshroom.data.api.DeckCardPatchDto(quantity = 3),
+            ) is ApiResult.Success,
+        )
+        assertTrue(repository.removeCard(3, 10) is ApiResult.Success)
+        assertTrue(repository.deleteDeck(3) is ApiResult.Success)
+
+        val create = server.takeRequest()
+        assertEquals("POST", create.method)
+        assertEquals("/api/v1/decks", create.path)
+        assertEquals("""{"name":"Burn"}""", create.body.readUtf8())
+        val rename = server.takeRequest()
+        assertEquals("PATCH", rename.method)
+        assertEquals("/api/v1/decks/3", rename.path)
+        assertEquals("""{"name":"Burn v2"}""", rename.body.readUtf8())
+        val detailRequest = server.takeRequest()
+        assertEquals("GET", detailRequest.method)
+        assertEquals("/api/v1/decks/3", detailRequest.path)
+        val batchRequest = server.takeRequest()
+        assertEquals("POST", batchRequest.method)
+        assertEquals("/api/v1/cards/batch", batchRequest.path)
+        val add = server.takeRequest()
+        assertEquals("POST", add.method)
+        assertEquals("/api/v1/decks/3/cards", add.path)
+        assertEquals("""{"cardId":10,"quantity":2}""", add.body.readUtf8())
+        val update = server.takeRequest()
+        assertEquals("PATCH", update.method)
+        assertEquals("/api/v1/decks/3/cards/10", update.path)
+        assertEquals("""{"quantity":3}""", update.body.readUtf8())
+        val removeCard = server.takeRequest()
+        assertEquals("DELETE", removeCard.method)
+        assertEquals("/api/v1/decks/3/cards/10", removeCard.path)
+        val deleteDeck = server.takeRequest()
+        assertEquals("DELETE", deleteDeck.method)
+        assertEquals("/api/v1/decks/3", deleteDeck.path)
+        assertEquals(8, server.requestCount)
+    }
+
     /** Builds a JSON response for one isolated API call. */
     private fun json(status: Int, body: String) = MockResponse()
         .setResponseCode(status)
@@ -80,5 +139,10 @@ class DeckRepositoryTest {
             {"id":10,"uuid":"a318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Counterspell"},
             {"id":11,"uuid":"0318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Lightning Bolt"}
         ]"""
+        const val EMPTY_DECK = """{"id":3,"userId":7,"name":"Burn","cards":[]}"""
+        const val EMPTY_DECK_RENAMED = """{"id":3,"userId":7,"name":"Burn v2","cards":[]}"""
+        const val DECK_WITH_CARD = """{"id":3,"userId":7,"name":"Burn v2","cards":[
+            {"cardId":11,"quantity":2,"section":"MAINBOARD"}
+        ]}"""
     }
 }

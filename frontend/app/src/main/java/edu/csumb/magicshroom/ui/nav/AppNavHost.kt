@@ -24,6 +24,8 @@ import edu.csumb.magicshroom.ui.account.AccountViewModel
 import edu.csumb.magicshroom.ui.account.UserScreen
 import edu.csumb.magicshroom.ui.admin.AdminScreen
 import edu.csumb.magicshroom.ui.detail.CardDetailScreen
+import edu.csumb.magicshroom.ui.deck.DeckDetailScreen
+import edu.csumb.magicshroom.ui.deck.DeckListScreen
 import edu.csumb.magicshroom.ui.login.LoginScreen
 import edu.csumb.magicshroom.ui.search.SearchScreen
 
@@ -33,6 +35,8 @@ private object AppRoute {
     const val ACCOUNT = "account"
     const val ADMIN = "admin"
     const val CARD = "cards/{cardId}"
+    const val DECKS = "decks"
+    const val DECK = "decks/{deckId}"
 }
 
 /** Public card browsing with optional Google sign-in and protected account and admin screens. */
@@ -52,8 +56,9 @@ fun AppNavHost(
     // Keep the Search destination (and its query/results) alive across sign-in and sign-out.
     LaunchedEffect(authState, route) {
         if ((user != null && route == AppRoute.LOGIN) ||
-            (authState == AuthState.SignedOut &&
-                (route == AppRoute.ACCOUNT || route == AppRoute.ADMIN))
+                (authState == AuthState.SignedOut &&
+                    (route == AppRoute.ACCOUNT || route == AppRoute.ADMIN ||
+                        route == AppRoute.DECKS || route == AppRoute.DECK))
         ) {
             navController.popBackStack(AppRoute.SEARCH, inclusive = false)
         }
@@ -119,6 +124,33 @@ fun AppNavHost(
                     } else {
                         null
                     },
+                    onDecksClick = {
+                        navController.navigate(AppRoute.DECKS) { launchSingleTop = true }
+                    },
+                )
+            }
+        }
+        composable(AppRoute.DECKS) {
+            if (authState == AuthState.Loading) {
+                AuthLoadingScreen()
+            } else if (user != null) {
+                DeckListScreen(
+                    onBack = { navController.popBackStack() },
+                    onDeckClick = { deckId -> navController.navigate("decks/$deckId") { launchSingleTop = true } },
+                )
+            }
+        }
+        composable(
+            AppRoute.DECK,
+            arguments = listOf(navArgument("deckId") { type = NavType.LongType }),
+        ) { entry ->
+            if (authState == AuthState.Loading) {
+                AuthLoadingScreen()
+            } else if (user != null) {
+                DeckDetailScreen(
+                    deckId = requireNotNull(entry.arguments).getLong("deckId"),
+                    onBack = { navController.popBackStack() },
+                    onCardClick = { cardId -> navController.navigate("cards/$cardId") { launchSingleTop = true } },
                 )
             }
         }

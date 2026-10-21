@@ -131,6 +131,19 @@ class ApiRoutesTest(@Autowired private val mockMvc: MockMvc) {
 		}
 	}
 
+	/** Creates an empty deck through the authenticated POST route. */
+	@Test
+	@DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+	fun `signed-in user can create a deck`() {
+		mockMvc.post("/api/v1/decks") { json("""{"name":"Test Deck"}""") }.andExpect {
+			status { isCreated() }
+			jsonPath("$.id") { isNumber() }
+			jsonPath("$.userId") { value(2) }
+			jsonPath("$.name") { value("Test Deck") }
+			jsonPath("$.cards.length()") { value(0) }
+		}
+	}
+
 	/** Rejects an unknown test caller on the personal-decks route. */
 	@Test
 	fun `unknown caller cannot list decks`() {
