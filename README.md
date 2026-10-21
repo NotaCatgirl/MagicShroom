@@ -8,9 +8,9 @@ Jetpack Compose and Supabase Auth.
 
 | Area | Status |
 |---|---|
-| Card catalog | 20,478 cards from the MTGJSON archive in Supabase; search by name and color, paging, card detail, and a batch lookup. |
+| Card catalog | 20,478 cards from the MTGJSON archive in Supabase; the API searches by name and color (the app by name), with paging, card detail, and a batch lookup. |
 | Card images | Scryfall scans for 20,473 cards. The app downloads them from Scryfall with its own User-Agent. |
-| Card comparison | "Compare with…" on a card lists similar cards (same type, same or overlapping colors); the comparison marks mana value, power, toughness, loyalty, popularity, and colors as better, worse, or equal, and lists keywords and types unique to each card. |
+| Card comparison | "Compare with…" on a card lists similar cards (same type, same or overlapping colors, never the card's own other face); the comparison marks mana value, power, toughness, loyalty, and popularity as better, worse, or equal, shows matching colors as equal, and lists keywords, types, and differing colors unique to each card. |
 | Sign-in | Supabase email/password and Google. The API verifies each access token against the project's signing keys and creates the app account on first use. |
 | Decks | Full deck API (create, rename, delete, add and remove cards). The app has the data layer but no deck screens yet. |
 | Admin | Users with the `ADMIN` role see Admin tools in the app: list users, change roles, and delete users (including their Supabase login when the server has the admin key). Promote the first admin with SQL; see below. |
@@ -25,14 +25,14 @@ Jetpack Compose and Supabase Auth.
    ```
    Spring Boot does not read `.env` itself; without the first part it fails with
    `Could not resolve placeholder 'SUPABASE_URL'`.
-3. Give the app its settings in `~/.gradle/gradle.properties` (machine-local, never committed):
+3. The app's build already points at the team's Supabase project. Choose its backend in
+   `~/.gradle/gradle.properties` (machine-local, never committed); without it the app uses
+   `http://10.0.2.2:8080`, the emulator's address for your computer:
    ```properties
-   supabaseUrl=https://YOUR_PROJECT_REF.supabase.co
-   supabasePublishableKey=sb_publishable_...
    backendUrl=https://magicshroom.onrender.com
    ```
-   To use the local API instead, build with `-PbackendUrl=http://10.0.2.2:8080` (the emulator's
-   address for your computer).
+   Override it for one build with `-PbackendUrl=...`. To use a different Supabase project, also set
+   `supabaseUrl` and `supabasePublishableKey` (see [`frontend/README.md`](frontend/README.md)).
 4. Open `frontend/` in Android Studio and run the app. Open `backend/` as its own project; the
    repository root is not a Gradle project.
 

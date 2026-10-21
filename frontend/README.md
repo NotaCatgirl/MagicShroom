@@ -4,8 +4,8 @@ A Jetpack Compose app for browsing the card catalog, comparing cards, and managi
 
 ## Configure
 
-The build reads three Gradle properties. Put them in `~/.gradle/gradle.properties` so they stay on
-your machine:
+The build reads these Gradle properties; set them in `~/.gradle/gradle.properties` so they stay on
+your machine (`stubUserId`, for mock data, is described under Build and test):
 
 ```properties
 supabaseUrl=https://YOUR_PROJECT_REF.supabase.co
@@ -13,8 +13,9 @@ supabasePublishableKey=sb_publishable_...
 backendUrl=https://magicshroom.onrender.com
 ```
 
-Without them the app falls back to placeholders: sign-in opens `example.supabase.co`, which does not
-exist. The app does not read the repository's `.env` file; that file is for the backend.
+Without `supabaseUrl` and `supabasePublishableKey`, `app/build.gradle.kts` falls back to the team's
+Supabase project (its URL and publishable key, which is public by design), so set them only to use a
+different project. The app does not read the repository's `.env` file; that file is for the backend.
 `backendUrl` defaults to `http://10.0.2.2:8080`, a backend running on your computer as seen from the
 emulator; override it for one build with `-PbackendUrl=...`. On Android 17 (API 37), allow
 local-network access when the app asks.
