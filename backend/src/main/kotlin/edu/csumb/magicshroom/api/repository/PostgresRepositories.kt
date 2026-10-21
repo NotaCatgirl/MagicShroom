@@ -90,6 +90,30 @@ class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: J
         return jdbc.query("select $columns from cards where id in ($placeholders)", mapper, *uniqueIds.toTypedArray())
     }
 
+    /**
+     * Ranks similar cards in PostgreSQL with [SimilarCardRanking]'s rules, so a request never loads the
+     * whole catalog. `cards` must stay unaliased because [columns] refers to `cards.scryfall_oracle_id`.
+     */
+    override fun findSimilar(card: Card, limit: Int): List<Card> = jdbc.query(
+        """
+        with base as (
+            select id as base_id, color_identity as base_colors, types as base_types, subtypes as base_subtypes,
+                coalesce(converted_mana_cost, 0) as base_mana_value
+            from cards where id = ?
+        )
+        select $columns from cards cross join base
+        where id <> base_id and types && base_types
+            and ((color_identity @> base_colors and color_identity <@ base_colors) or color_identity && base_colors)
+        order by case when color_identity @> base_colors and color_identity <@ base_colors then 0 else 1 end,
+            abs(coalesce(converted_mana_cost, 0) - base_mana_value),
+            cardinality(array(select unnest(subtypes) intersect select unnest(base_subtypes))) desc,
+            edhrec_rank asc nulls last,
+            id
+        limit ?
+        """.trimIndent(),
+        mapper, card.id, limit,
+    )
+
     /** Finds a card by its stable archive UUID. */
     override fun findByUuid(uuid: UUID): Card? = jdbc.query("select $columns from cards where uuid = ?", mapper, uuid).firstOrNull()
 
