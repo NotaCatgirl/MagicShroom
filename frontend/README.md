@@ -1,52 +1,82 @@
 # MagicShroom Android app
 
-A Jetpack Compose app for browsing the card catalog, comparing cards, and managing users (admins).
+The Compose app opens a public searchable card gallery with the MagicShroom logo above the
+search bar. Guests can search, open card details, and compare cards without signing in. Card data
+and image URLs come from the backend's public card endpoints; the app loads scans from Scryfall.
+Configure the backend and its Scryfall image metadata import as described in
+[`backend/README.md`](../backend/README.md).
 
-## Configure
+The top-right Log in button opens Google sign-in through Supabase Auth. Signed-in users get an
+Account button with read-only profile information and sign-out. Admin tools are available only
+when the backend confirms the signed-in user has the ADMIN role; the backend enforces admin
+permissions. There is no email/password or demo-account login. Deck actions are not connected
+to the search screen yet.
 
-The build reads these Gradle properties; set them in `~/.gradle/gradle.properties` so they stay on
-your machine (`stubUserId`, for mock data, is described under Build and test):
+Open `frontend/` in Android Studio. The build reads these public Auth settings from the ignored
+`.env` in the repository root:
 
 ```properties
-supabaseUrl=https://YOUR_PROJECT_REF.supabase.co
-supabasePublishableKey=sb_publishable_...
-backendUrl=https://magicshroom.onrender.com
+SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-Without `supabaseUrl` and `supabasePublishableKey`, `app/build.gradle.kts` falls back to the team's
-Supabase project (its URL and publishable key, which is public by design), so set them only to use a
-different project. The app does not read the repository's `.env` file; that file is for the backend.
-`backendUrl` defaults to `http://10.0.2.2:8080`, a backend running on your computer as seen from the
-emulator; override it for one build with `-PbackendUrl=...`. On Android 17 (API 37), allow
-local-network access when the app asks.
+The existing names `supabaseUrl` and `supabasePublishableKey` also work in `.env`. After changing
+these settings, rebuild and use Android Studio's full Run action so the installed app gets them.
+User-level Gradle properties (`~/.gradle/gradle.properties`) can override these values and set
+the backend address:
 
-## Sign-in
+```properties
+supabaseUrl=https://YOUR_PROJECT.supabase.co
+supabasePublishableKey=sb_publishable_...
+backendUrl=https://YOUR_BACKEND_HOST
+```
 
-Email/password and Google both go through Supabase Auth. Google returns to the app through the
-`magicshroom://auth` link, which must be in the Supabase project's allowed redirect URLs. The app
-sends the Supabase access token to the backend on every request.
+Enable the Google provider in your Supabase project and allow `magicshroom://auth` as an Auth
+redirect URL. The app's Android manifest already handles that callback. Only the URL and
+publishable key belong in the Android app; keep database passwords and secret/service keys on the
+server. The app restores a saved Supabase session on launch and returns to public search after
+sign-out, with Log in shown again.
 
-## Screens
+The committed `frontend/gradle.properties` points `backendUrl` at the Render API
+(`https://magicshroom.onrender.com`). For a backend running on your computer, build with
+`-PbackendUrl=http://10.0.2.2:8080`, the emulator's address for your computer (also the fallback
+when no `backendUrl` is set anywhere). Start a backend with card data using
+[`backend/README.md`](../backend/README.md). Google sign-in does not start the backend or make
+search available by itself.
 
-- **Search:** card gallery with name search and paging.
-- **Card detail:** full scan (with a face switch for double-faced cards), mana cost, type line, rules
-  text, and **Compare with…**.
-- **Similar cards:** the cards most like the selected one; tap one to compare.
-- **Comparison:** both cards, a tally, a stat table where each verdict has a symbol, a word, and a
-  color (▲ Better, ▼ Worse, = Equal, — Not comparable), and the traits each card has alone (★).
-- **Account:** profile and sign-out; **Admin tools** appear for users with the `ADMIN` role.
+On the Android 17 (API 37) emulator, allow local-network access when the search screen asks for
+it. This permission is only requested for a debug build using `10.0.2.2`. If the backend is
+unavailable, search shows an error with a Retry button.
+
+Build from this directory with `./gradlew :app:assembleDebug`.
+
+On macOS, checkouts under `~/Desktop` write generated Android build output to
+`~/.gradle/magicshroom-builds/<checkout-id>/<module>/` to keep it outside iCloud Desktop syncing.
+The debug APK is under `app/outputs/apk/debug/app-debug.apk` within that checkout's output folder.
+Other checkout locations and operating systems use the usual build directories. After a Gradle
+build-directory change, sync the project in Android Studio and use the full Run action.
+
+## Comparing cards
+
+A card's detail screen has **Compare with…**, which lists the cards most like it: the same main
+type, the same or overlapping colors, the closest mana value, and never the card's own other face.
+Pick one to see both cards side by side with a tally, a stat table, and the traits only one card
+has (★). Every verdict has a symbol, a word, and a color: ▲ Better, ▼ Worse, = Equal, and — N/A
+when a value is missing or not a number (such as `*`). Verdicts are from the first card's point of
+view: lower mana value and EDHREC rank are better; higher power, toughness, and loyalty are better.
+Comparison needs a backend with `GET /api/v1/cards/{cardId}/similar`; an older one shows
+"Comparisons need the latest server version."
 
 Card images come from Scryfall, which rejects default HTTP-library User-Agents, so the app's image
 loader (`MagicShroomApplication`) sends its own.
 
-## Build and test
+## Tests
 
 ```bash
-./gradlew :app:assembleDebug
 ./gradlew :app:testDebugUnitTest
 ./gradlew :app:connectedDebugAndroidTest   # with an emulator running
 ```
 
-For UI work on mock data, run `cd backend && ./gradlew bootTestRun` and build with
-`-PbackendUrl=http://10.0.2.2:8080 -PstubUserId=1`; the mock backend then treats every request as
-that user (1 is the admin). You still sign in through Supabase first.
+For admin screens on mock data, run `cd backend && ./gradlew bootTestRun` and build with
+`-PbackendUrl=http://10.0.2.2:8080 -PstubUserId=1`. After a Google sign-in, the mock backend treats
+every request as user 1, the admin.

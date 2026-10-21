@@ -6,7 +6,8 @@ import kotlinx.coroutines.flow.StateFlow
 data class UserProfile(
     val email: String,
     val displayName: String,
-    val role: String,
+    /** Display value; account permissions must be confirmed by the backend. */
+    val role: String = "USER",
 )
 
 /** The user-facing account data held for a signed-in session. */
@@ -24,19 +25,22 @@ sealed interface AuthState {
     data class SignedIn(val session: AuthSession) : AuthState
 }
 
-/** Authentication boundary implemented by Supabase in production and a deterministic fake in tests. */
+/** Google-only authentication; screens observe sessions and never handle OAuth tokens themselves. */
 interface AuthRepository {
     /** Emits session changes, including the initial restoration from secure platform storage. */
     val authState: StateFlow<AuthState>
 
-    /** Signs in an existing Supabase email/password account, or returns null when rejected. */
-    suspend fun signIn(email: String, password: String): AuthSession?
+    /** A safe message for a failed sign-in, callback, or sign-out; null when there is no error. */
+    val errorMessage: StateFlow<String?>
 
     /** Starts Google OAuth in the system browser; the configured app link completes the session. */
     suspend fun signInWithGoogle()
 
     /** Ends the active Supabase session. */
     suspend fun signOut()
+
+    /** Clears an error when the user retries or leaves the sign-in screen. */
+    fun clearError()
 
     /** Returns the latest access token for attaching to API requests. */
     fun accessToken(): String?
