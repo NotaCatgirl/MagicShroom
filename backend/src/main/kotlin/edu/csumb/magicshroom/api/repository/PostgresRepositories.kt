@@ -19,7 +19,7 @@ import java.util.UUID
 @Repository
 @Profile("!mock")
 class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: JsonMapper) : CardRepository {
-    private val columns = "id, uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings, (select faces from card_images where oracle_id = cards.scryfall_oracle_id) as image_faces"
+    private val columns = "id, uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings, (select faces from card_images where oracle_id = cards.scryfall_oracle_id) as image_faces, power, toughness, loyalty, edhrec_rank"
     private val fields = "uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings"
     private val values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb"
     private val mapper = RowMapper { rs: ResultSet, _: Int ->
@@ -39,6 +39,8 @@ class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: J
             purchaseUrls = json.readValue(rs.getString("purchase_urls")),
             rulings = json.readValue(rs.getString("rulings")),
             imageFaces = rs.getString("image_faces")?.let { json.readValue(it) } ?: emptyList(),
+            power = rs.getString("power"), toughness = rs.getString("toughness"), loyalty = rs.getString("loyalty"),
+            edhrecRank = rs.getInt("edhrec_rank").takeUnless { rs.wasNull() },
         )
     }
 

@@ -71,6 +71,22 @@ class ApiRoutesTest(@Autowired private val mockMvc: MockMvc) {
 		}
 	}
 
+	/** Returns printed stats and popularity, keeping values such as `*` as text. */
+	@Test
+	fun `card responses include printed stats and popularity`() {
+		mockMvc.get("/api/v1/cards/4").andExpect {
+			status { isOk() }
+			jsonPath("$.power") { value("4") }
+			jsonPath("$.toughness") { value("4") }
+			jsonPath("$.edhrecRank") { value(4698) }
+		}
+		mockMvc.get("/api/v1/cards/20").andExpect {
+			status { isOk() }
+			jsonPath("$.power") { value("*") }
+			jsonPath("$.toughness") { value("1+*") }
+		}
+	}
+
 	/** Returns unique full card records in request order from the public batch route. */
 	@Test
 	fun `batch cards preserves request order and removes duplicate ids`() {
