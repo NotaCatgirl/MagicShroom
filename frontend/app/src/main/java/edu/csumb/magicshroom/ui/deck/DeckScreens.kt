@@ -198,6 +198,7 @@ fun DeckDetailScreen(deckId: Long, onBack: () -> Unit, onCardClick: (Long) -> Un
                     if (isSearchingCards) CircularProgressIndicator(modifier = Modifier.padding(8.dp))
                     cardSearchError?.let { ErrorText(it) }
                     matchingCards.forEach { card ->
+                        val isAlreadyInDeck = deck.cards.any { it.card.id == card.id }
                         Row(
                             Modifier.fillMaxWidth().padding(vertical = 7.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -205,11 +206,11 @@ fun DeckDetailScreen(deckId: Long, onBack: () -> Unit, onCardClick: (Long) -> Un
                             Text(card.cardName, modifier = Modifier.weight(1f))
                             TextButton(
                                 onClick = {
-                                    vm.addCard(card.id, 1, selectedSection)
+                                    vm.addCard(card.id, selectedSection)
                                     catalogQuery = ""
                                 },
-                                enabled = !state.isWorking,
-                            ) { Text("Add") }
+                                enabled = !state.isWorking && !isAlreadyInDeck,
+                            ) { Text(if (isAlreadyInDeck) "Added" else "Add") }
                         }
                     }
                     if (catalogQuery.trim().length >= 2 && !isSearchingCards && matchingCards.isEmpty() && cardSearchError == null) {
@@ -229,16 +230,9 @@ fun DeckDetailScreen(deckId: Long, onBack: () -> Unit, onCardClick: (Long) -> Un
                                             modifier = Modifier.fillMaxWidth().clickable { onCardClick(entry.card.id) },
                                             style = MaterialTheme.typography.titleMedium,
                                         )
-                                        Text("${entry.section} • qty ${entry.quantity}", style = MaterialTheme.typography.bodySmall)
-                                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            TextButton(onClick = { vm.updateCard(entry.card.id, entry.quantity + 1, entry.section) }, enabled = !state.isWorking) {
-                                                Text("+1")
-                                            }
-                                            TextButton(
-                                                onClick = { vm.updateCard(entry.card.id, entry.quantity - 1, entry.section) },
-                                                enabled = !state.isWorking && entry.quantity > 1,
-                                            ) { Text("−1") }
-                                            TextButton(onClick = { vm.removeCard(entry.card.id) }, enabled = !state.isWorking) { Text("Remove") }
+                                        Text(entry.section.name, style = MaterialTheme.typography.bodySmall)
+                                        TextButton(onClick = { vm.removeCard(entry.card.id) }, enabled = !state.isWorking) {
+                                            Text("Remove")
                                         }
                                     }
                                 }

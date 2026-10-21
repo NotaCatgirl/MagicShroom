@@ -13,6 +13,7 @@ import io.github.jan.supabase.auth.FlowType
 import io.github.jan.supabase.createSupabaseClient
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import java.util.concurrent.TimeUnit
 
 /**
  * Creates the app's shared objects once (manual dependency injection). ViewModel factories get
@@ -32,6 +33,11 @@ class AppContainer {
     val authRepository = SupabaseAuthRepository(supabase)
 
     private val okHttpClient = OkHttpClient.Builder()
+        // Render may need about two minutes to wake from an idle state.
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(180, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .callTimeout(180, TimeUnit.SECONDS)
         .addInterceptor(BearerTokenInterceptor(authRepository::accessToken))
         .apply {
             // Optional debug identity for the mock backend; production uses the Supabase token above.

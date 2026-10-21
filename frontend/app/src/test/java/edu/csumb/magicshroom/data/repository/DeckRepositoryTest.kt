@@ -1,6 +1,7 @@
 package edu.csumb.magicshroom.data.repository
 
 import edu.csumb.magicshroom.data.api.BearerTokenInterceptor
+import edu.csumb.magicshroom.data.api.DeckSection
 import edu.csumb.magicshroom.data.api.createMagicShroomApi
 import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
@@ -15,6 +16,7 @@ import org.junit.Test
 /** Contract tests for resolving deck entries with a single bulk card lookup. */
 class DeckRepositoryTest {
     private val server = MockWebServer()
+    private lateinit var cards: CardRepository
     private lateinit var repository: DeckRepository
 
     /** Creates the repositories over an isolated API server and shared card cache. */
@@ -25,7 +27,8 @@ class DeckRepositoryTest {
             .addInterceptor(BearerTokenInterceptor { "signed-test-token" })
             .build()
         val api = createMagicShroomApi(server.url("/").toString(), client)
-        repository = DeckRepository(api, CardRepository(api))
+        cards = CardRepository(api)
+        repository = DeckRepository(api, cards)
     }
 
     /** Stops the isolated API server after each repository test. */
@@ -58,6 +61,30 @@ class DeckRepositoryTest {
         assertEquals("/api/v1/cards/batch", batchRequest.path)
         assertEquals("""{"cardIds":[10,11]}""", batchRequest.body.readUtf8())
         assertEquals(2, server.requestCount)
+    }
+
+    /** Resolves a newly added search result from cache without another card batch request. */
+    @Test
+    fun `adding a searched card refreshes the deck from shared card cache`() = runTest {
+        server.enqueue(json(200, SEARCHED_CARD))
+        server.enqueue(json(201, """{"cardId":10,"quantity":1,"section":"MAINBOARD"}"""))
+        server.enqueue(json(200, DECK_WITH_SEARCHED_CARD))
+
+        assertTrue(cards.listCards(name = "bolt") is ApiResult.Success)
+        assertTrue(repository.addCard(3, 10, quantity = 1, section = DeckSection.MAINBOARD) is ApiResult.Success)
+        val refreshedDeck = repository.getMyDeckWithCards(3)
+
+        assertTrue(refreshedDeck is ApiResult.Success)
+        val card = (refreshedDeck as ApiResult.Success).data.cards.single()
+        assertEquals("Lightning Bolt", card.card.cardName)
+        assertEquals(1, card.quantity)
+        assertEquals("/api/v1/cards?name=bolt&page=0&size=20", server.takeRequest().path)
+        val addRequest = server.takeRequest()
+        assertEquals("POST", addRequest.method)
+        assertEquals("/api/v1/decks/3/cards", addRequest.path)
+        assertEquals("""{"cardId":10}""", addRequest.body.readUtf8())
+        assertEquals("/api/v1/decks/3", server.takeRequest().path)
+        assertEquals(3, server.requestCount)
     }
 
     /** Exercises every deck mutation and verifies each Retrofit route and request body. */
@@ -141,8 +168,14 @@ class DeckRepositoryTest {
         ]"""
         const val EMPTY_DECK = """{"id":3,"userId":7,"name":"Burn","cards":[]}"""
         const val EMPTY_DECK_RENAMED = """{"id":3,"userId":7,"name":"Burn v2","cards":[]}"""
+        const val SEARCHED_CARD = """{"content":[
+            {"id":10,"uuid":"0318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Lightning Bolt"}
+        ],"page":{"size":20,"number":0,"totalElements":1,"totalPages":1}}"""
         const val DECK_WITH_CARD = """{"id":3,"userId":7,"name":"Burn v2","cards":[
             {"cardId":11,"quantity":2,"section":"MAINBOARD"}
+        ]}"""
+        const val DECK_WITH_SEARCHED_CARD = """{"id":3,"userId":7,"name":"Burn","cards":[
+            {"cardId":10,"quantity":1,"section":"MAINBOARD"}
         ]}"""
     }
 }

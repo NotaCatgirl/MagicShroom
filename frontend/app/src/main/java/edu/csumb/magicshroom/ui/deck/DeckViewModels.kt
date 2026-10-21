@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import edu.csumb.magicshroom.MagicShroomApplication
-import edu.csumb.magicshroom.data.api.DeckCardPatchDto
 import edu.csumb.magicshroom.data.api.DeckSection
 import edu.csumb.magicshroom.data.repository.ApiResult
 import edu.csumb.magicshroom.data.repository.DeckRepository
@@ -108,14 +107,9 @@ class DeckDetailViewModel(private val decks: DeckRepository, private val deckId:
     /** Renames this deck and reloads its contents. */
     fun rename(name: String) = mutate { decks.renameDeck(deckId, name) }
 
-    /** Adds a catalog card to this deck and reloads its contents. */
-    fun addCard(cardId: Long, quantity: Int, section: DeckSection) = mutate {
-        decks.addCard(deckId, cardId, quantity, section)
-    }
-
-    /** Updates a deck card's quantity and section. */
-    fun updateCard(cardId: Long, quantity: Int, section: DeckSection) = mutate {
-        decks.updateCard(deckId, cardId, DeckCardPatchDto(quantity = quantity, section = section))
+    /** Adds a unique catalog card once and reloads this deck. */
+    fun addCard(cardId: Long, section: DeckSection) = mutate {
+        decks.addCard(deckId, cardId, quantity = 1, section = section)
     }
 
     /** Removes a card from this deck and reloads its contents. */
