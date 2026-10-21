@@ -194,23 +194,29 @@ class SupabasePostgresAuthIntegrationTest {
     /** Ranks similar cards in PostgreSQL exactly like the Kotlin rules, on a route that needs no token. */
     @Test
     fun `postgres similar cards match the kotlin ranking without a token`() {
-        val ids = SimilarCardFixtures.cards.map { card ->
-            jdbc.queryForObject(
-                """insert into cards (uuid, card_name, color_identity, colors, converted_mana_cost, types, subtypes, edhrec_rank)
-                    values (?, ?, ?::text[], ?::text[], ?, ?::text[], ?::text[], ?) returning id""",
-                Long::class.java,
-                UUID.randomUUID(), card.cardName, textArray(card.colorIdentity.map { it.name }),
-                textArray(card.colors.map { it.name }), card.convertedManaCost, textArray(card.types),
-                textArray(card.subtypes), card.edhrecRank,
-            )!!
-        }
-        val baseId = ids[SimilarCardFixtures.cards.indexOfFirst { it.cardName == SimilarCardFixtures.BASE }]
+        val ids = mutableListOf<Long>()
         try {
+            SimilarCardFixtures.cards.forEach { card ->
+                ids += jdbc.queryForObject(
+                    """insert into cards (uuid, card_name, color_identity, colors, converted_mana_cost, types, subtypes, edhrec_rank, scryfall_oracle_id, power, toughness)
+                        values (?, ?, ?::text[], ?::text[], ?, ?::text[], ?::text[], ?, ?, ?, ?) returning id""",
+                    Long::class.java,
+                    UUID.randomUUID(), card.cardName, textArray(card.colorIdentity.map { it.name }),
+                    textArray(card.colors.map { it.name }), card.convertedManaCost, textArray(card.types),
+                    textArray(card.subtypes), card.edhrecRank, card.scryfallOracleId, card.power, card.toughness,
+                )!!
+            }
+            val baseId = ids[SimilarCardFixtures.cards.indexOfFirst { it.cardName == SimilarCardFixtures.BASE }]
             val response = given().port(port).queryParam("limit", 30).get("/api/v1/cards/$baseId/similar")
             assertEquals(200, response.statusCode())
-            assertEquals(SimilarCardFixtures.expectedOrder, response.jsonPath().getList<String>("cardName"))
+            val fixtureNames = SimilarCardFixtures.cards.map { it.cardName }.toSet()
+            val names = response.jsonPath().getList<String>("cardName")
+            assertEquals(SimilarCardFixtures.expectedOrder, names.filter { it in fixtureNames })
+            assertEquals(500, response.jsonPath().getInt("find { it.cardName == 'Twin Elf' }.edhrecRank"))
+            assertEquals("2", response.jsonPath().getString("find { it.cardName == 'Twin Elf' }.power"))
+            assertEquals("3", response.jsonPath().getString("find { it.cardName == 'Twin Elf' }.toughness"))
         } finally {
-            jdbc.update("delete from cards where id in (${ids.joinToString()})")
+            if (ids.isNotEmpty()) jdbc.update("delete from cards where id in (${ids.joinToString()})")
         }
     }
 

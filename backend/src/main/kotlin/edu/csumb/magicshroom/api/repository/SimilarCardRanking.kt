@@ -9,7 +9,8 @@ import kotlin.math.abs
  */
 object SimilarCardRanking {
 	/**
-	 * Up to [limit] of [candidates] that share a main type with [base], best match first: the same color
+	 * Up to [limit] of [candidates] that share a main type with [base] and are not another face of the
+	 * same card (same Scryfall oracle id), best match first: the same color
 	 * identity before sharing only some colors, then closest mana value (missing counts as 0), most
 	 * shared subtypes, most popular (lowest EDHREC rank, unranked last), and lowest id.
 	 */
@@ -26,7 +27,9 @@ object SimilarCardRanking {
 		}
 
 		return candidates
-			.filter { it.id != base.id && it.types.any(base.types::contains) && tier(it) != null }
+			.filter {
+				it.id != base.id && (base.scryfallOracleId == null || it.scryfallOracleId != base.scryfallOracleId) && it.types.any(base.types::contains) && tier(it) != null
+			}
 			.sortedWith(
 				compareBy<Card> { tier(it) }
 					.thenBy { abs((it.convertedManaCost ?: 0.0) - baseManaValue) }

@@ -92,17 +92,19 @@ class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: J
 
     /**
      * Ranks similar cards in PostgreSQL with [SimilarCardRanking]'s rules, so a request never loads the
-     * whole catalog. `cards` must stay unaliased because [columns] refers to `cards.scryfall_oracle_id`.
+     * whole catalog. The query reads the base card's row by `card.id` (only the id of the passed card is
+     * used) and skips other faces of it. `cards` must stay unaliased because [columns] refers to `cards.scryfall_oracle_id`.
      */
     override fun findSimilar(card: Card, limit: Int): List<Card> = jdbc.query(
         """
         with base as (
             select id as base_id, color_identity as base_colors, types as base_types, subtypes as base_subtypes,
-                coalesce(converted_mana_cost, 0) as base_mana_value
+                coalesce(converted_mana_cost, 0) as base_mana_value, scryfall_oracle_id as base_oracle_id
             from cards where id = ?
         )
         select $columns from cards cross join base
         where id <> base_id and types && base_types
+            and (base_oracle_id is null or scryfall_oracle_id is distinct from base_oracle_id)
             and ((color_identity @> base_colors and color_identity <@ base_colors) or color_identity && base_colors)
         order by case when color_identity @> base_colors and color_identity <@ base_colors then 0 else 1 end,
             abs(coalesce(converted_mana_cost, 0) - base_mana_value),
