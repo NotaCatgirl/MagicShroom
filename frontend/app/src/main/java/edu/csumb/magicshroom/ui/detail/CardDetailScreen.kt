@@ -37,8 +37,8 @@ import coil3.compose.AsyncImage
 import edu.csumb.magicshroom.MagicShroomApplication
 import edu.csumb.magicshroom.data.api.CardDto
 import edu.csumb.magicshroom.data.repository.ApiResult
-import edu.csumb.magicshroom.ui.common.BackTopBar
-import edu.csumb.magicshroom.ui.common.FanContentNotice
+import edu.csumb.magicshroom.ui.components.BackTopBar
+import edu.csumb.magicshroom.ui.components.FanContentNotice
 import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BorderLavender
 import edu.csumb.magicshroom.ui.theme.BrandPurple

@@ -1,4 +1,4 @@
-package edu.csumb.magicshroom.ui.common
+package edu.csumb.magicshroom.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box

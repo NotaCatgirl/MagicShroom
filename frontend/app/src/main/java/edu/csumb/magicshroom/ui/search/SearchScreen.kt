@@ -64,7 +64,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import edu.csumb.magicshroom.data.api.CardDto
-import edu.csumb.magicshroom.ui.common.FanContentNotice
+import edu.csumb.magicshroom.ui.components.FanContentNotice
 import edu.csumb.magicshroom.ui.components.MagicShroomLogo
 import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BorderLavender

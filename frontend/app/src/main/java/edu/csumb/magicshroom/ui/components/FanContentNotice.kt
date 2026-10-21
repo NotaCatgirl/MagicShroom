@@ -1,4 +1,4 @@
-package edu.csumb.magicshroom.ui.common
+package edu.csumb.magicshroom.ui.components
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
