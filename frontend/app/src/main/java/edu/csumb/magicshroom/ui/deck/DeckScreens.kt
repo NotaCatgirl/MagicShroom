@@ -1,15 +1,21 @@
 package edu.csumb.magicshroom.ui.deck
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,17 +40,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil3.compose.AsyncImage
 import edu.csumb.magicshroom.MagicShroomApplication
 import edu.csumb.magicshroom.data.api.CardDto
 import edu.csumb.magicshroom.data.api.DeckSection
 import edu.csumb.magicshroom.data.repository.ApiResult
 import edu.csumb.magicshroom.data.repository.ResolvedDeck
+import edu.csumb.magicshroom.data.repository.ResolvedDeckCard
 import edu.csumb.magicshroom.ui.theme.AppBackground
+import edu.csumb.magicshroom.ui.theme.BrandPurple
 import kotlinx.coroutines.delay
 
 object DeckTestTags {
@@ -52,6 +64,8 @@ object DeckTestTags {
     const val CREATE = "deck_create"
     const val DETAIL = "deck_detail_screen"
     const val SEARCH_CARDS = "deck_search_cards"
+    const val CARD_GRID = "deck_card_grid"
+    const val CARD = "deck_card_"
 }
 
 /** Displays the signed-in user's decks and provides create and delete actions. */
@@ -106,7 +120,7 @@ fun DeckListScreen(onBack: () -> Unit, onDeckClick: (Long) -> Unit) {
     }
 }
 
-/** Shows one deck with catalog search and card quantity and section controls. */
+/** Renders a deck row with its name, card count, and delete action. */
 @Composable
 private fun DeckListItem(deck: ResolvedDeck, onClick: () -> Unit, onDelete: () -> Unit) {
     androidx.compose.material3.Card(shape = RoundedCornerShape(14.dp)) {
@@ -221,21 +235,19 @@ fun DeckDetailScreen(deckId: Long, onBack: () -> Unit, onCardClick: (Long) -> Un
                     if (deck.cards.isEmpty()) {
                         Text("This deck is empty.", modifier = Modifier.padding(vertical = 12.dp))
                     } else {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier.weight(1f).fillMaxWidth().testTag(DeckTestTags.CARD_GRID),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
                             items(deck.cards, key = { it.card.id }) { entry ->
-                                androidx.compose.material3.Card {
-                                    Column(Modifier.fillMaxWidth().padding(12.dp)) {
-                                        Text(
-                                            entry.card.cardName,
-                                            modifier = Modifier.fillMaxWidth().clickable { onCardClick(entry.card.id) },
-                                            style = MaterialTheme.typography.titleMedium,
-                                        )
-                                        Text(entry.section.name, style = MaterialTheme.typography.bodySmall)
-                                        TextButton(onClick = { vm.removeCard(entry.card.id) }, enabled = !state.isWorking) {
-                                            Text("Remove")
-                                        }
-                                    }
-                                }
+                                DeckCardTile(
+                                    entry = entry,
+                                    enabled = !state.isWorking,
+                                    onClick = { onCardClick(entry.card.id) },
+                                    onRemove = { vm.removeCard(entry.card.id) },
+                                )
                             }
                         }
                     }
@@ -252,6 +264,49 @@ fun DeckDetailScreen(deckId: Long, onBack: () -> Unit, onCardClick: (Long) -> Un
         ) { name ->
             vm.rename(name)
             renaming = false
+        }
+    }
+}
+
+/** Displays one deck card's image, name, section, and remove action. */
+@Composable
+private fun DeckCardTile(entry: ResolvedDeckCard, enabled: Boolean, onClick: () -> Unit, onRemove: () -> Unit) {
+    val card = entry.card
+    val imageUrl = card.imageFaces.firstOrNull()?.smallUrl
+    var imageFailed by remember(imageUrl) { mutableStateOf(false) }
+    androidx.compose.material3.Card(
+        modifier = Modifier.fillMaxWidth().testTag(DeckTestTags.CARD + card.id),
+        shape = RoundedCornerShape(14.dp),
+    ) {
+        Column(Modifier.fillMaxWidth().padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(0.714f)
+                    .background(Brush.verticalGradient(listOf(BrandPurple, BrandPurple.copy(alpha = 0.45f))))
+                    .clickable(onClick = onClick),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (imageUrl != null && !imageFailed) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "${card.cardName} card",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize(),
+                        onError = { imageFailed = true },
+                    )
+                } else {
+                    Text(card.cardName, color = Color.White, modifier = Modifier.padding(8.dp))
+                }
+            }
+            Text(
+                text = card.cardName,
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 2,
+            )
+            Text(entry.section.name, style = MaterialTheme.typography.bodySmall)
+            TextButton(onClick = onRemove, enabled = enabled) { Text("Remove") }
         }
     }
 }
