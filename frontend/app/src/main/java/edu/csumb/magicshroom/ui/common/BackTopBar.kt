@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 /** Top app bar with [title] and a "‹" Back control, shared by the card screens. */
@@ -20,7 +21,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun BackTopBar(title: String, onBack: () -> Unit) {
     TopAppBar(
-        title = { Text(title) },
+        title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         navigationIcon = {
             Box(
                 modifier = Modifier.size(48.dp).semantics { contentDescription = "Back" }

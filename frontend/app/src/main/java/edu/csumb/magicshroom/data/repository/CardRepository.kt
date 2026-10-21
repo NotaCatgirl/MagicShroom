@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap
 /** Card catalog access for ViewModels. Never throws for HTTP or network failures; see [ApiResult]. */
 class CardRepository(private val api: MagicShroomApi) {
     private val cardsById = ConcurrentHashMap<Long, CardDto>()
+    private val similarIdsByCard = ConcurrentHashMap<Pair<Long, Int>, List<Long>>()
 
     /** One page of cards whose name contains [name] and whose color identity includes [color]. */
     suspend fun listCards(
@@ -48,11 +49,23 @@ class CardRepository(private val api: MagicShroomApi) {
         return ApiResult.Success(resolved)
     }
 
-    /** Up to [limit] cards most like card [cardId], best first; cached so the comparison opens instantly. */
-    suspend fun getSimilarCards(cardId: Long, limit: Int = 10): ApiResult<List<CardDto>> =
-        apiCall { api.getSimilarCards(cardId, limit) }.also { result ->
-            if (result is ApiResult.Success) remember(result.data)
+    /**
+     * Up to [limit] cards most like card [cardId], best first. The list and its cards are cached, so
+     * reopening it or a comparison from it makes no request.
+     */
+    suspend fun getSimilarCards(cardId: Long, limit: Int = 10): ApiResult<List<CardDto>> {
+        val key = cardId to limit
+        similarIdsByCard[key]?.let { ids ->
+            val cached = ids.mapNotNull(cardsById::get)
+            if (cached.size == ids.size) return ApiResult.Success(cached)
         }
+        return apiCall { api.getSimilarCards(cardId, limit) }.also { result ->
+            if (result is ApiResult.Success) {
+                remember(result.data)
+                similarIdsByCard[key] = result.data.map { it.id }
+            }
+        }
+    }
 
     /** Stores full card records in the process-wide repository cache by API ID. */
     private fun remember(cards: Iterable<CardDto>) {

@@ -35,12 +35,14 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import edu.csumb.magicshroom.MagicShroomApplication
 import edu.csumb.magicshroom.data.api.CardDto
 import edu.csumb.magicshroom.data.repository.ApiResult
 import edu.csumb.magicshroom.ui.common.BackTopBar
+import edu.csumb.magicshroom.ui.common.FanContentNotice
 import edu.csumb.magicshroom.ui.search.SearchCardTile
 import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BrandPurple
@@ -58,8 +60,11 @@ fun CardComparisonScreen(baseId: Long, otherId: Long, onBack: () -> Unit, onCard
     }
     when (val current = result) {
         null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        // getCardsByIds removes duplicates, so first/last also covers comparing a card with itself.
-        is ApiResult.Success -> CardComparisonContent(current.data.first(), current.data.last(), onBack, onCardClick)
+        is ApiResult.Success -> {
+            val base = current.data.first { it.id == baseId }
+            val other = current.data.firstOrNull { it.id == otherId } ?: base
+            CardComparisonContent(base, other, onBack, onCardClick)
+        }
         is ApiResult.Failure -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
             Text(current.userMessage)
             Button(onClick = { retry++ }) { Text("Retry") }
@@ -92,21 +97,22 @@ fun CardComparisonContent(base: CardDto, other: CardDto, onBack: () -> Unit, onC
             if (comparison.shared.isNotEmpty()) TraitList("Shared", comparison.shared, VerdictStyle.EQUAL)
             TraitList("Unique to ${base.cardName}", comparison.uniqueToBase, VerdictStyle.UNIQUE)
             TraitList("Unique to ${other.cardName}", comparison.uniqueToOther, VerdictStyle.UNIQUE)
+            FanContentNotice()
         }
     }
 }
 
 /** Icon, word, and color for each verdict, so color is never the only signal (WCAG 1.4.1). */
-internal enum class VerdictStyle(val symbol: String, val word: String, val color: Color) {
-    BETTER("▲", "Better", Color(0xFF2E7D32)),
-    WORSE("▼", "Worse", Color(0xFFC62828)),
+private enum class VerdictStyle(val symbol: String, val word: String, val color: Color, val badgeWord: String = word) {
+    BETTER("▲", "Better", Color(0xFF1B5E20)),
+    WORSE("▼", "Worse", Color(0xFFB71C1C)),
     EQUAL("=", "Equal", Color(0xFF616161)),
     UNIQUE("★", "Unique", BrandPurple),
-    NOT_COMPARABLE("—", "Not comparable", Color(0xFF616161)),
+    NOT_COMPARABLE("—", "Not comparable", Color(0xFF616161), badgeWord = "N/A"),
 }
 
 /** The style that shows this verdict. */
-internal fun Verdict.style(): VerdictStyle = when (this) {
+private fun Verdict.style(): VerdictStyle = when (this) {
     Verdict.BETTER -> VerdictStyle.BETTER
     Verdict.WORSE -> VerdictStyle.WORSE
     Verdict.EQUAL -> VerdictStyle.EQUAL
@@ -142,25 +148,31 @@ private fun Tally(comparison: CardComparison) {
 @Composable
 private fun StatTable(baseName: String, otherName: String, rows: List<StatRow>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().clearAndSetSemantics {}, verticalAlignment = Alignment.CenterVertically) {
             Text("Stat", Modifier.weight(1.1f), fontWeight = FontWeight.SemiBold)
-            Text(baseName, Modifier.weight(1f), fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, maxLines = 2)
+            Text(
+                baseName, Modifier.weight(1f), fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+                maxLines = 2, overflow = TextOverflow.Ellipsis,
+            )
             Text("vs", Modifier.weight(1.3f), textAlign = TextAlign.Center)
-            Text(otherName, Modifier.weight(1f), fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, maxLines = 2)
+            Text(
+                otherName, Modifier.weight(1f), fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
+                maxLines = 2, overflow = TextOverflow.Ellipsis,
+            )
         }
         HorizontalDivider()
         rows.forEach { row ->
             val style = row.verdict.style()
             Row(
                 modifier = Modifier.fillMaxWidth().clearAndSetSemantics {
-                    contentDescription = "${row.label}: $baseName ${row.baseValue}, $otherName ${row.otherValue}, ${style.word.lowercase()}"
+                    contentDescription = "${row.label}: $baseName ${spoken(row.baseValue)}, $otherName ${spoken(row.otherValue)}, ${style.word.lowercase()}"
                 },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(row.label, Modifier.weight(1.1f))
-                Text(row.baseValue, Modifier.weight(1f), textAlign = TextAlign.Center)
+                Text(row.label, Modifier.weight(1.1f), style = MaterialTheme.typography.bodyMedium)
+                Text(row.baseValue, Modifier.weight(1f), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
                 VerdictBadge(style, Modifier.weight(1.3f))
-                Text(row.otherValue, Modifier.weight(1f), textAlign = TextAlign.Center)
+                Text(row.otherValue, Modifier.weight(1f), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -171,7 +183,7 @@ private fun StatTable(baseName: String, otherName: String, rows: List<StatRow>) 
 private fun VerdictBadge(style: VerdictStyle, modifier: Modifier = Modifier) {
     Box(modifier, contentAlignment = Alignment.Center) {
         Text(
-            "${style.symbol} ${style.word}",
+            "${style.symbol} ${style.badgeWord}",
             modifier = Modifier.background(style.color.copy(alpha = 0.12f), RoundedCornerShape(50))
                 .padding(horizontal = 10.dp, vertical = 4.dp),
             color = style.color,
@@ -182,10 +194,22 @@ private fun VerdictBadge(style: VerdictStyle, modifier: Modifier = Modifier) {
     }
 }
 
+/** How a table value is read aloud: "—" as none, "#65" as rank 65. */
+private fun spoken(value: String): String = when {
+    value == "—" -> "none"
+    value.startsWith("#") -> "rank ${value.drop(1)}"
+    else -> value
+}
+
 /** A titled line of traits, each marked with [style]'s symbol; "None" when empty. */
 @Composable
 private fun TraitList(title: String, traits: List<String>, style: VerdictStyle) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(
+        modifier = Modifier.clearAndSetSemantics {
+            contentDescription = if (traits.isEmpty()) "$title: none" else "$title: ${traits.joinToString()}"
+        },
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
         Text(
             text = if (traits.isEmpty()) "None" else traits.joinToString("  ") { "${style.symbol} $it" },

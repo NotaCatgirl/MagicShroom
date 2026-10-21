@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.csumb.magicshroom.data.api.CardDto
+import edu.csumb.magicshroom.ui.common.FanContentNotice
 import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BorderLavender
 import edu.csumb.magicshroom.ui.theme.BrandPurple
@@ -267,11 +268,7 @@ fun SearchContent(
                             }
                         }
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Text(
-                                "MagicShroom is unofficial fan content. Card images and related materials are © Wizards of the Coast LLC; this app is not endorsed by Wizards.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
+                            FanContentNotice()
                         }
                     }
                 }

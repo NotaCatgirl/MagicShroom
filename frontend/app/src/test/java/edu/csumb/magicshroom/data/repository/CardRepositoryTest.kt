@@ -122,6 +122,18 @@ class CardRepositoryTest {
         assertEquals(1, server.requestCount)
     }
 
+    /** Reopening the same comparison list is served from the cache. */
+    @Test
+    fun `getSimilarCards serves a repeated request from the cache`() = runTest {
+        server.enqueue(json(200, "[$CARD_TWO]"))
+
+        val first = (repository.getSimilarCards(1, limit = 5) as ApiResult.Success).data
+        val second = (repository.getSimilarCards(1, limit = 5) as ApiResult.Success).data
+
+        assertEquals(1, server.requestCount)
+        assertEquals(first.map { it.cardName }, second.map { it.cardName })
+    }
+
     /** Reads stats when the server sends them and tolerates their absence from older servers. */
     @Test
     fun `card stats are parsed when present and optional otherwise`() = runTest {

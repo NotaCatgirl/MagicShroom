@@ -4,7 +4,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import edu.csumb.magicshroom.data.api.CardDto
@@ -50,7 +49,6 @@ class CardComparisonUiTest {
         composeRule.onNodeWithContentDescription("2 better, 2 worse, 0 equal, 7 unique").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Mana value: Llanowar Elves 1, Serra Angel 5, better").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Power: Llanowar Elves 1, Serra Angel 4, worse").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Unique to Serra Angel").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("★ Flying  ★ Vigilance  ★ Angel  ★ White").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Unique to Serra Angel: Flying, Vigilance, Angel, White").performScrollTo().assertIsDisplayed()
     }
 }

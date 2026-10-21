@@ -108,11 +108,11 @@ private fun traits(card: CardDto, includeColors: Boolean): List<String> =
 
 /** Color identity letters for the table, e.g. `G` or `R W`; `C` when colorless. */
 private fun colorCodes(card: CardDto): String =
-    card.colorIdentity.takeIf { it.isNotEmpty() }?.joinToString(" ") { it.name } ?: "C"
+    card.colorIdentity.sortedBy(Color::ordinal).takeIf { it.isNotEmpty() }?.joinToString(" ") { it.name } ?: "C"
 
 /** Color identity names for trait lists; "Colorless" when there are none. */
 private fun colorNames(card: CardDto): List<String> =
-    card.colorIdentity.map(COLOR_NAMES::getValue).ifEmpty { listOf(COLOR_NAMES.getValue(Color.C)) }
+    card.colorIdentity.sortedBy(Color::ordinal).map(COLOR_NAMES::getValue).ifEmpty { listOf(COLOR_NAMES.getValue(Color.C)) }
 
 /** `5` for whole numbers, `1.5` otherwise. */
 private fun formatNumber(value: Double): String = if (value % 1.0 == 0.0) value.toLong().toString() else value.toString()

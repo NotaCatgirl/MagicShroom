@@ -99,6 +99,64 @@ class CardComparisonTest {
     }
 
     @Test
+    fun `comparing a card with itself is all equal`() {
+        val comparison = compareCards(serra, serra)
+
+        assertEquals(
+            listOf(
+                StatRow("Mana value", "5", "5", Verdict.EQUAL),
+                StatRow("Power", "4", "4", Verdict.EQUAL),
+                StatRow("Toughness", "4", "4", Verdict.EQUAL),
+                StatRow("Popularity", "#4698", "#4698", Verdict.EQUAL),
+                StatRow("Colors", "W", "W", Verdict.EQUAL),
+            ),
+            comparison.rows,
+        )
+        assertEquals(listOf("Flying", "Vigilance", "Angel", "Creature"), comparison.shared)
+        assertEquals(0, comparison.uniqueCount)
+    }
+
+    @Test
+    fun `a stat on only one card is shown but not compared`() {
+        val rows = compareCards(llanowar, card(10, "Green Relic", types = listOf("Artifact"))).rows
+
+        assertEquals(StatRow("Power", "1", "—", Verdict.NOT_COMPARABLE), rows.first { it.label == "Power" })
+        assertEquals(StatRow("Toughness", "1", "—", Verdict.NOT_COMPARABLE), rows.first { it.label == "Toughness" })
+    }
+
+    @Test
+    fun `no popularity row when neither card is ranked`() {
+        val rows = compareCards(card(13, "A"), card(14, "B")).rows
+
+        assertNull(rows.firstOrNull { it.label == "Popularity" })
+    }
+
+    @Test
+    fun `traits are ordered subtypes then supertypes then types`() {
+        val comparison = compareCards(
+            card(11, "Legendary Elf", subtypes = listOf("Elf"), supertypes = listOf("Legendary")),
+            card(12, "Plain Bear", subtypes = listOf("Bear")),
+        )
+
+        assertEquals(listOf("Elf", "Legendary"), comparison.uniqueToBase)
+        assertEquals(listOf("Creature"), comparison.shared)
+    }
+
+    @Test
+    fun `more keyword forms`() {
+        assertEquals(listOf("Flying", "Ward"), keywords("Flying, ward {2}"))
+        assertEquals(listOf("Hexproof"), keywords("Hexproof from white"))
+        assertEquals(listOf("Flying"), keywords("Flying\nFlying"))
+    }
+
+    @Test
+    fun `colors are listed in WUBRG order`() {
+        val comparison = compareCards(card(15, "A", colors = listOf(Color.R, Color.W)), card(16, "B", colors = listOf(Color.W, Color.R)))
+
+        assertEquals(StatRow("Colors", "W R", "W R", Verdict.EQUAL), comparison.rows.first { it.label == "Colors" })
+    }
+
+    @Test
     fun `colorless identity is named`() {
         val rock = card(7, "Rock", colors = emptyList(), types = listOf("Artifact"))
         val relic = card(8, "Relic", colors = listOf(Color.R), types = listOf("Artifact"))
@@ -123,6 +181,7 @@ class CardComparisonTest {
         colors: List<Color> = listOf(Color.G),
         types: List<String> = listOf("Creature"),
         subtypes: List<String> = emptyList(),
+        supertypes: List<String> = emptyList(),
         manaValue: Double? = 1.0,
         power: String? = null,
         toughness: String? = null,
@@ -131,7 +190,7 @@ class CardComparisonTest {
         text: String? = null,
     ) = CardDto(
         id = id, uuid = "uuid-$id", cardName = name, colorIdentity = colors, colors = colors,
-        convertedManaCost = manaValue, text = text, types = types, subtypes = subtypes,
+        convertedManaCost = manaValue, text = text, types = types, subtypes = subtypes, supertypes = supertypes,
         power = power, toughness = toughness, loyalty = loyalty, edhrecRank = rank,
     )
 }

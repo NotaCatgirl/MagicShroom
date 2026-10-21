@@ -38,6 +38,7 @@ import edu.csumb.magicshroom.MagicShroomApplication
 import edu.csumb.magicshroom.data.api.CardDto
 import edu.csumb.magicshroom.data.repository.ApiResult
 import edu.csumb.magicshroom.ui.common.BackTopBar
+import edu.csumb.magicshroom.ui.common.FanContentNotice
 import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BorderLavender
 import edu.csumb.magicshroom.ui.theme.BrandPurple
@@ -129,11 +130,7 @@ fun CardDetailContent(card: CardDto, onBack: () -> Unit, onCompareClick: (() -> 
                     modifier = Modifier.fillMaxWidth().testTag(CardDetailTestTags.COMPARE),
                 ) { Text("Compare with…") }
             }
-            Text(
-                "MagicShroom is unofficial fan content. Card images and related materials are © Wizards of the Coast LLC; this app is not endorsed by Wizards.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            FanContentNotice()
         }
     }
 }

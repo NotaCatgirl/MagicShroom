@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
@@ -30,6 +31,7 @@ import edu.csumb.magicshroom.MagicShroomApplication
 import edu.csumb.magicshroom.data.api.CardDto
 import edu.csumb.magicshroom.data.repository.ApiResult
 import edu.csumb.magicshroom.ui.common.BackTopBar
+import edu.csumb.magicshroom.ui.common.FanContentNotice
 import edu.csumb.magicshroom.ui.search.SearchCardTile
 import edu.csumb.magicshroom.ui.theme.AppBackground
 
@@ -47,11 +49,21 @@ fun SimilarCardsScreen(cardId: Long, onBack: () -> Unit, onCardClick: (Long) -> 
     val repository = remember(app) { app.container.cardRepository }
     var retry by remember { mutableIntStateOf(0) }
     var baseName by remember(cardId) { mutableStateOf("") }
+    var baseFailed by remember(cardId) { mutableStateOf(false) }
     var result by remember(cardId) { mutableStateOf<ApiResult<List<CardDto>>?>(null) }
     LaunchedEffect(cardId, retry) {
         result = null
-        (repository.getCard(cardId) as? ApiResult.Success)?.let { baseName = it.data.cardName }
-        result = repository.getSimilarCards(cardId)
+        baseFailed = false
+        when (val base = repository.getCard(cardId)) {
+            is ApiResult.Success -> {
+                baseName = base.data.cardName
+                result = repository.getSimilarCards(cardId)
+            }
+            is ApiResult.Failure -> {
+                baseFailed = true
+                result = base
+            }
+        }
     }
     Scaffold(
         modifier = Modifier.testTag(CompareTestTags.SIMILAR_SCREEN),
@@ -65,7 +77,7 @@ fun SimilarCardsScreen(cardId: Long, onBack: () -> Unit, onCardClick: (Long) -> 
                     modifier = Modifier.align(Alignment.Center),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text(similarCardsErrorMessage(current))
+                    Text(if (baseFailed) current.userMessage else similarCardsErrorMessage(current))
                     Button(onClick = { retry++ }) { Text("Retry") }
                 }
                 is ApiResult.Success -> if (current.data.isEmpty()) {
@@ -84,6 +96,7 @@ fun SimilarCardsScreen(cardId: Long, onBack: () -> Unit, onCardClick: (Long) -> 
                         items(current.data, key = { it.id }) { card ->
                             SearchCardTile(card, onClick = { onCardClick(card.id) })
                         }
+                        item(span = { GridItemSpan(maxLineSpan) }) { FanContentNotice() }
                     }
                 }
             }
