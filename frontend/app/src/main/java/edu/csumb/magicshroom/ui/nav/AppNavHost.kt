@@ -20,6 +20,7 @@ import edu.csumb.magicshroom.data.auth.AuthState
 import edu.csumb.magicshroom.ui.account.AccountViewModel
 import edu.csumb.magicshroom.ui.account.UserScreen
 import edu.csumb.magicshroom.ui.admin.AdminScreen
+import edu.csumb.magicshroom.ui.compare.CardComparisonScreen
 import edu.csumb.magicshroom.ui.compare.SimilarCardsScreen
 import edu.csumb.magicshroom.ui.detail.CardDetailScreen
 import edu.csumb.magicshroom.ui.login.LoginScreen
@@ -31,6 +32,7 @@ private object AppRoute {
     const val ADMIN = "admin"
     const val CARD = "cards/{cardId}"
     const val COMPARE = "cards/{cardId}/compare"
+    const val COMPARISON = "cards/{cardId}/compare/{otherId}"
 }
 
 /** Shows sign-in or authenticated destinations based on the persisted Supabase session. */
@@ -74,6 +76,21 @@ fun AppNavHost(
                         cardId = cardId,
                         onBack = { navController.popBackStack() },
                         onCardClick = { otherId -> navController.navigate("cards/$cardId/compare/$otherId") },
+                    )
+                }
+                composable(
+                    AppRoute.COMPARISON,
+                    arguments = listOf(
+                        navArgument("cardId") { type = NavType.LongType },
+                        navArgument("otherId") { type = NavType.LongType },
+                    ),
+                ) { entry ->
+                    val arguments = requireNotNull(entry.arguments)
+                    CardComparisonScreen(
+                        baseId = arguments.getLong("cardId"),
+                        otherId = arguments.getLong("otherId"),
+                        onBack = { navController.popBackStack() },
+                        onCardClick = { navController.navigate("cards/$it") },
                     )
                 }
                 composable(AppRoute.ACCOUNT) {
