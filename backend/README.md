@@ -15,9 +15,18 @@ export SUPABASE_URL='https://PROJECT_REF.supabase.co'
 ./gradlew bootRun
 ```
 
+With a filled-in `../.env`, the same is `set -a && . ../.env && set +a && ./gradlew bootRun`;
+Spring Boot does not read `.env` files itself.
+
 The backend validates Supabase bearer tokens with the project's JWKS endpoint. Configure an
 asymmetric JWT signing key in Supabase Auth. The database password and pooler connection belong
 only on the server. Public card GET routes need no token; all writes and deck routes do.
+
+`GET /api/v1/cards/{cardId}/similar` (public) ranks cards that share a main type with the card, excluding the card's other faces:
+same color identity first, then shared colors; within each, closest mana value, most shared
+subtypes, and most popular. The rules live in `SimilarCardRanking` (used by the mock profile) and in
+one SQL query in `PostgresCardRepository`; `SimilarCardFixtures` tests that both agree. Card
+responses also carry `power`, `toughness`, `loyalty`, and `edhrecRank` from the archive.
 
 The `mock` profile uses JSON fixtures under `src/test/resources` and a stub caller for isolated tests:
 
