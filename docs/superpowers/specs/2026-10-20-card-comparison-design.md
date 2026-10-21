@@ -52,7 +52,9 @@ Public, like the other card reads. Returns `Card[]`, best match first.
 
 - `limit`: default 10, 1–30; anything else is 400 (Problem Details, like the other card routes).
 - Unknown `cardId` is 404, via `CardService.get`.
-- Candidates: every other card (`id` differs) whose `types` share at least one entry with the base card's.
+- Candidates: every other card (`id` differs) whose `types` share at least one entry with the base card's,
+  excluding other faces of the same card (same `scryfallOracleId`, when the base card has one; 248 oracle
+  ids in the catalog have two or more face rows, such as Delver of Secrets / Insectile Aberration).
 - Tier 0: same color identity as a set (two colorless cards match). Tier 1: shares at least one color.
   Cards in neither tier are excluded, so a colorless card is matched only to other colorless cards.
 - Order: tier, then `|mana value − base mana value|` (missing mana value counts as 0), then number of
@@ -66,7 +68,8 @@ Implementation:
   implementation over `findAll()` (used by the mock profile), mirroring how `search` works today.
 - `PostgresCardRepository` overrides it with one SQL query. The query must not alias the `cards`
   table, because the shared column list references `cards.scryfall_oracle_id`.
-- `CardService.similar(cardId, limit)` validates the limit, loads the base card, and delegates.
+- `CardController` validates `limit` with `@Min(1) @Max(30)`, like the list route's `size`;
+  `CardService.similar(cardId, limit)` loads the base card (404 if missing) and delegates.
 - `SupabaseSecurity` adds `/api/v1/cards/*/similar` to the public GET matchers; `/api/v1/cards/*`
   matches only one path segment.
 - `docs/openapi.yaml` documents the route and the four fields.
