@@ -343,7 +343,14 @@ internal fun SearchCardTile(card: CardDto, onClick: () -> Unit) {
                     contentDescription = "${card.cardName} card",
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize(),
-                    onError = { imageFailed = true },
+                    onError = {
+                        android.util.Log.e(
+                            "MagicShroomImage",
+                            "Failed to load $imageUrl",
+                            it.result.throwable,
+                        )
+                        imageFailed = true
+                    },
                 )
             } else {
                 Text(card.cardName, color = Color.White, modifier = Modifier.padding(10.dp))
@@ -357,7 +364,10 @@ internal fun SearchCardTile(card: CardDto, onClick: () -> Unit) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            card.manaCost?.takeIf(String::isNotBlank)?.let { Text(it, color = BrandPurple, style = MaterialTheme.typography.labelSmall) }
+            card.manaCost?.takeIf(String::isNotBlank)?.let { manaCost ->
+                Text("Mana cost", style = MaterialTheme.typography.labelSmall)
+                Text(manaCost, color = BrandPurple, style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }

@@ -1,7 +1,9 @@
 package edu.csumb.magicshroom
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -44,7 +46,8 @@ class CardGalleryTest {
         }
         composeRule.onNodeWithTag(SearchTestTags.CARD + card.id).assertIsDisplayed().performClick()
         composeRule.onNodeWithTag(CardDetailTestTags.SCREEN).assertIsDisplayed()
-        composeRule.onNodeWithText("Lightning Bolt").assertIsDisplayed()
+        // The detail screen intentionally shows the name in both its app bar and body.
+        composeRule.onAllNodesWithText("Lightning Bolt").assertCountEquals(2)
     }
 
     /** A multi-face card exposes a control that advances through its actual face scans. */
@@ -59,16 +62,21 @@ class CardGalleryTest {
     }
 
     /** Provides a two-face sample card for gallery and detail UI tests. */
-    private fun testCard() = CardDto(
-        id = 1,
-        uuid = "0318d56b-647f-4b0f-9306-9adc3312619d",
-        cardName = "Lightning Bolt",
-        manaCost = "{R}",
-        types = listOf("Instant"),
-        text = "Deals 3 damage to any target.",
-        imageFaces = listOf(
-            CardImageFaceDto("Front", "https://cards.scryfall.io/small/front/a.jpg", "https://cards.scryfall.io/normal/front/a.jpg"),
-            CardImageFaceDto("Back", "https://cards.scryfall.io/small/back/a.jpg", "https://cards.scryfall.io/normal/back/a.jpg"),
-        ),
-    )
+    private fun testCard(): CardDto {
+        // Use a packaged image so this UI test doesn't depend on network access or a live image host.
+        val localImageUrl = "android.resource://edu.csumb.magicshroom/${R.mipmap.ic_launcher}"
+        return CardDto(
+            id = 1,
+            uuid = "0318d56b-647f-4b0f-9306-9adc3312619d",
+            cardName = "Lightning Bolt",
+            manaCost = "{R}",
+            types = listOf("Instant"),
+            text = "Deals 3 damage to any target.",
+            imageFaces = listOf(
+                CardImageFaceDto("Front", localImageUrl, localImageUrl),
+                CardImageFaceDto("Back", localImageUrl, localImageUrl),
+            ),
+        )
+    }
+
 }
