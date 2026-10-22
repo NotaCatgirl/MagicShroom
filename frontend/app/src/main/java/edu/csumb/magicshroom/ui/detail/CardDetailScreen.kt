@@ -2,7 +2,6 @@ package edu.csumb.magicshroom.ui.detail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,18 +10,15 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,14 +32,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import edu.csumb.magicshroom.MagicShroomApplication
 import edu.csumb.magicshroom.data.api.CardDto
 import edu.csumb.magicshroom.data.repository.ApiResult
+import edu.csumb.magicshroom.ui.components.BackTopBar
+import edu.csumb.magicshroom.ui.components.FanContentNotice
 import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BorderLavender
 import edu.csumb.magicshroom.ui.theme.BrandPurple
@@ -53,11 +48,12 @@ object CardDetailTestTags {
     const val SCREEN = "card_detail_screen"
     const val IMAGE = "card_detail_image"
     const val NEXT_FACE = "card_detail_next_face"
+    const val COMPARE = "card_detail_compare"
 }
 
-/** Loads full details for a selected card from the public API. */
+/** Loads full details for a selected card from the public API; [onCompareClick] shows "Compare with…". */
 @Composable
-fun CardDetailScreen(cardId: Long, onBack: () -> Unit) {
+fun CardDetailScreen(cardId: Long, onBack: () -> Unit, onCompareClick: (() -> Unit)? = null) {
     val app = LocalContext.current.applicationContext as MagicShroomApplication
     val repository = remember(app) { app.container.cardRepository }
     var retry by remember { mutableIntStateOf(0) }
@@ -68,7 +64,7 @@ fun CardDetailScreen(cardId: Long, onBack: () -> Unit) {
     }
     when (val current = result) {
         null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        is ApiResult.Success -> CardDetailContent(current.data, onBack)
+        is ApiResult.Success -> CardDetailContent(current.data, onBack, onCompareClick)
         is ApiResult.Failure -> Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
             Text(current.userMessage)
             Button(onClick = { retry++ }) { Text("Retry") }
@@ -78,9 +74,8 @@ fun CardDetailScreen(cardId: Long, onBack: () -> Unit) {
 }
 
 /** Shows the selected printing's full scan and the card's catalog information. */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CardDetailContent(card: CardDto, onBack: () -> Unit) {
+fun CardDetailContent(card: CardDto, onBack: () -> Unit, onCompareClick: (() -> Unit)? = null) {
     var faceIndex by remember(card.id) { mutableIntStateOf(0) }
     var legalitiesExpanded by remember(card.id) { mutableStateOf(false) }
     var rulingsExpanded by remember(card.id) { mutableStateOf(false) }
@@ -90,18 +85,7 @@ fun CardDetailContent(card: CardDto, onBack: () -> Unit) {
     Scaffold(
         modifier = Modifier.testTag(CardDetailTestTags.SCREEN),
         containerColor = AppBackground,
-        topBar = {
-            TopAppBar(
-                title = { Text(card.cardName) },
-                navigationIcon = {
-                    Box(
-                        modifier = Modifier.size(48.dp).semantics { contentDescription = "Back" }
-                            .clickable(role = Role.Button, onClick = onBack),
-                        contentAlignment = Alignment.Center,
-                    ) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
-                },
-            )
-        },
+        topBar = { BackTopBar(title = card.cardName, onBack = onBack) },
     ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
@@ -152,6 +136,13 @@ fun CardDetailContent(card: CardDto, onBack: () -> Unit) {
                 card.subtypes.takeIf { it.isNotEmpty() }?.joinToString(" — ", prefix = " — ").orEmpty()
             Text(typeLine.trim(), style = MaterialTheme.typography.titleMedium)
             card.text?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            if (onCompareClick != null) {
+                OutlinedButton(
+                    onClick = onCompareClick,
+                    modifier = Modifier.fillMaxWidth().testTag(CardDetailTestTags.COMPARE),
+                ) { Text("Compare with…") }
+            }
+            FanContentNotice()
             DetailDropdownSection(
                 title = "Legalities",
                 expanded = legalitiesExpanded,

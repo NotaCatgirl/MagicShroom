@@ -23,6 +23,8 @@ import edu.csumb.magicshroom.data.auth.AuthState
 import edu.csumb.magicshroom.ui.account.AccountViewModel
 import edu.csumb.magicshroom.ui.account.UserScreen
 import edu.csumb.magicshroom.ui.admin.AdminScreen
+import edu.csumb.magicshroom.ui.compare.CardComparisonScreen
+import edu.csumb.magicshroom.ui.compare.SimilarCardsScreen
 import edu.csumb.magicshroom.ui.detail.CardDetailScreen
 import edu.csumb.magicshroom.ui.login.LoginScreen
 import edu.csumb.magicshroom.ui.search.SearchScreen
@@ -33,6 +35,8 @@ private object AppRoute {
     const val ACCOUNT = "account"
     const val ADMIN = "admin"
     const val CARD = "cards/{cardId}"
+    const val COMPARE = "cards/{cardId}/compare"
+    const val COMPARISON = "cards/{cardId}/compare/{otherId}"
 }
 
 /** Public card browsing with optional Google sign-in and protected account and admin screens. */
@@ -84,9 +88,38 @@ fun AppNavHost(
             AppRoute.CARD,
             arguments = listOf(navArgument("cardId") { type = NavType.LongType }),
         ) { entry ->
+            val cardId = requireNotNull(entry.arguments).getLong("cardId")
             CardDetailScreen(
-                cardId = requireNotNull(entry.arguments).getLong("cardId"),
+                cardId = cardId,
                 onBack = { navController.popBackStack() },
+                onCompareClick = { navController.navigate("cards/$cardId/compare") },
+            )
+        }
+        // Comparison is public, like card browsing: the similar-cards route needs no sign-in.
+        composable(
+            AppRoute.COMPARE,
+            arguments = listOf(navArgument("cardId") { type = NavType.LongType }),
+        ) { entry ->
+            val cardId = requireNotNull(entry.arguments).getLong("cardId")
+            SimilarCardsScreen(
+                cardId = cardId,
+                onBack = { navController.popBackStack() },
+                onCardClick = { otherId -> navController.navigate("cards/$cardId/compare/$otherId") },
+            )
+        }
+        composable(
+            AppRoute.COMPARISON,
+            arguments = listOf(
+                navArgument("cardId") { type = NavType.LongType },
+                navArgument("otherId") { type = NavType.LongType },
+            ),
+        ) { entry ->
+            val arguments = requireNotNull(entry.arguments)
+            CardComparisonScreen(
+                baseId = arguments.getLong("cardId"),
+                otherId = arguments.getLong("otherId"),
+                onBack = { navController.popBackStack() },
+                onCardClick = { navController.navigate("cards/$it") { launchSingleTop = true } },
             )
         }
         composable(AppRoute.LOGIN) {

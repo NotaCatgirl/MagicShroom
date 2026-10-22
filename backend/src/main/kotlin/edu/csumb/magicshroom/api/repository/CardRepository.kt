@@ -24,6 +24,9 @@ interface CardRepository {
 	/** Returns the existing cards matching [ids]; implementations may fetch them in one query. */
 	fun findByIds(ids: List<Long>): List<Card> = ids.distinct().mapNotNull(::findById)
 
+	/** Up to [limit] cards most like [card], best first, by [SimilarCardRanking]'s rules. */
+	fun findSimilar(card: Card, limit: Int): List<Card> = SimilarCardRanking.rank(card, findAll(), limit)
+
 	/** The card with this MTGJSON [uuid], or null. */
 	fun findByUuid(uuid: UUID): Card?
 

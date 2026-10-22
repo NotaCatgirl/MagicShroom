@@ -29,6 +29,14 @@ data class Card(
 	val purchaseUrls: List<PurchaseUrl> = emptyList(),
 	val rulings: List<Ruling> = emptyList(),
 	val imageFaces: List<CardImageFace> = emptyList(),
+	/** Printed power, as text because of values such as `*`; null for cards without one. Read-only. */
+	val power: String? = null,
+	/** Printed toughness, as text like [power]. Read-only. */
+	val toughness: String? = null,
+	/** A planeswalker's starting loyalty, as text. Read-only. */
+	val loyalty: String? = null,
+	/** EDHREC popularity rank; lower is more popular, null if unranked. Read-only. */
+	val edhrecRank: Int? = null,
 ) {
 	/** True if this card's color identity includes [color]. Colorless ([Color.C]) matches an empty identity. */
 	fun hasColorIdentity(color: Color): Boolean =

@@ -109,6 +109,56 @@ class CardRepositoryTest {
         assertEquals("""{"cardIds":[101]}""", secondRequest)
     }
 
+    /** Requests similar cards and caches them so the comparison screen needs no second request. */
+    @Test
+    fun `getSimilarCards sends the limit and caches the cards`() = runTest {
+        server.enqueue(json(200, "[$CARD_TWO]"))
+
+        val result = repository.getSimilarCards(1, limit = 5) as ApiResult.Success
+
+        assertEquals("/api/v1/cards/1/similar?limit=5", server.takeRequest().path)
+        assertEquals(listOf("Counterspell"), result.data.map { it.cardName })
+        assertEquals("Counterspell", (repository.getCard(2) as ApiResult.Success).data.cardName)
+        assertEquals(1, server.requestCount)
+    }
+
+    /** Reopening the same comparison list is served from the cache. */
+    @Test
+    fun `getSimilarCards serves a repeated request from the cache`() = runTest {
+        server.enqueue(json(200, "[$CARD_TWO]"))
+
+        val first = (repository.getSimilarCards(1, limit = 5) as ApiResult.Success).data
+        val second = (repository.getSimilarCards(1, limit = 5) as ApiResult.Success).data
+
+        assertEquals(1, server.requestCount)
+        assertEquals(first.map { it.cardName }, second.map { it.cardName })
+    }
+
+    /** Reads stats when the server sends them and tolerates their absence from older servers. */
+    @Test
+    fun `card stats are parsed when present and optional otherwise`() = runTest {
+        server.enqueue(json(200, """[{"id":4,"uuid":"u4","cardName":"Serra Angel","power":"4","toughness":"4","loyalty":null,"edhrecRank":4698},$CARD_TWO]"""))
+
+        val cards = (repository.getSimilarCards(1) as ApiResult.Success).data
+
+        assertEquals("/api/v1/cards/1/similar?limit=10", server.takeRequest().path)
+        assertEquals("4", cards[0].power)
+        assertEquals("4", cards[0].toughness)
+        assertEquals(4698, cards[0].edhrecRank)
+        assertEquals(null, cards[1].power)
+        assertEquals(null, cards[1].edhrecRank)
+    }
+
+    /** A server older than the similar route answers 404, which the screen explains. */
+    @Test
+    fun `getSimilarCards reports a missing route as a 404`() = runTest {
+        server.enqueue(json(404, """{"title":"Not Found","status":404,"detail":"No static resource api/v1/cards/1/similar."}"""))
+
+        val result = repository.getSimilarCards(1)
+
+        assertEquals(404, (result as ApiResult.HttpError).status)
+    }
+
     @Test
     fun `uses the latest refreshed access token for every request`() = runTest {
         server.enqueue(json(200, CARD_PAGE))
