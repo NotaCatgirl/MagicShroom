@@ -64,6 +64,89 @@ class DeckRepositoryTest {
         assertEquals(2, server.requestCount)
     }
 
+    /** Resolves a newly added search result from cache without another card batch request. */
+    @Test
+    fun `adding a searched card refreshes the deck from shared card cache`() = runTest {
+        server.enqueue(json(200, SEARCHED_CARD))
+        server.enqueue(json(201, """{"cardId":10,"quantity":1,"section":"MAINBOARD"}"""))
+        server.enqueue(json(200, DECK_WITH_SEARCHED_CARD))
+
+        assertTrue(cardRepository.listCards(name = "bolt") is ApiResult.Success)
+        assertTrue(repository.addCard(3, 10, quantity = 1, section = DeckSection.MAINBOARD) is ApiResult.Success)
+        val refreshedDeck = repository.getMyDeckWithCards(3)
+
+        assertTrue(refreshedDeck is ApiResult.Success)
+        val card = (refreshedDeck as ApiResult.Success).data.cards.single()
+        assertEquals("Lightning Bolt", card.card.cardName)
+        assertEquals(1, card.quantity)
+        assertEquals("/api/v1/cards?name=bolt&page=0&size=20", server.takeRequest().path)
+        val addRequest = server.takeRequest()
+        assertEquals("POST", addRequest.method)
+        assertEquals("/api/v1/decks/3/cards", addRequest.path)
+        assertEquals("""{"cardId":10}""", addRequest.body.readUtf8())
+        assertEquals("/api/v1/decks/3", server.takeRequest().path)
+        assertEquals(3, server.requestCount)
+    }
+
+    /** Exercises every deck mutation and verifies each Retrofit route and request body. */
+    @Test
+    fun `deck create detail rename and card mutations call expected routes`() = runTest {
+        server.enqueue(json(201, EMPTY_DECK))
+        server.enqueue(json(200, EMPTY_DECK_RENAMED))
+        server.enqueue(json(200, DECK_WITH_CARD))
+        server.enqueue(json(200, CARDS))
+        server.enqueue(json(201, """{"cardId":10,"quantity":2,"section":"MAINBOARD"}"""))
+        server.enqueue(json(200, """{"cardId":10,"quantity":3,"section":"SIDEBOARD"}"""))
+        server.enqueue(MockResponse().setResponseCode(204))
+        server.enqueue(MockResponse().setResponseCode(204))
+
+        assertTrue(repository.createDeck("  Burn  ") is ApiResult.Success)
+        assertTrue(repository.renameDeck(3, "  Burn v2  ") is ApiResult.Success)
+        val detail = repository.getMyDeckWithCards(3)
+        assertTrue(detail is ApiResult.Success)
+        assertEquals("Lightning Bolt", (detail as ApiResult.Success).data.cards.single().card.cardName)
+        assertTrue(repository.addCard(3, 10, 2, edu.csumb.magicshroom.data.api.DeckSection.MAINBOARD) is ApiResult.Success)
+        assertTrue(
+            repository.updateCard(
+                3,
+                10,
+                edu.csumb.magicshroom.data.api.DeckCardPatchDto(quantity = 3),
+            ) is ApiResult.Success,
+        )
+        assertTrue(repository.removeCard(3, 10) is ApiResult.Success)
+        assertTrue(repository.deleteDeck(3) is ApiResult.Success)
+
+        val create = server.takeRequest()
+        assertEquals("POST", create.method)
+        assertEquals("/api/v1/decks", create.path)
+        assertEquals("""{"name":"Burn"}""", create.body.readUtf8())
+        val rename = server.takeRequest()
+        assertEquals("PATCH", rename.method)
+        assertEquals("/api/v1/decks/3", rename.path)
+        assertEquals("""{"name":"Burn v2"}""", rename.body.readUtf8())
+        val detailRequest = server.takeRequest()
+        assertEquals("GET", detailRequest.method)
+        assertEquals("/api/v1/decks/3", detailRequest.path)
+        val batchRequest = server.takeRequest()
+        assertEquals("POST", batchRequest.method)
+        assertEquals("/api/v1/cards/batch", batchRequest.path)
+        val add = server.takeRequest()
+        assertEquals("POST", add.method)
+        assertEquals("/api/v1/decks/3/cards", add.path)
+        assertEquals("""{"cardId":10,"quantity":2}""", add.body.readUtf8())
+        val update = server.takeRequest()
+        assertEquals("PATCH", update.method)
+        assertEquals("/api/v1/decks/3/cards/10", update.path)
+        assertEquals("""{"quantity":3}""", update.body.readUtf8())
+        val removeCard = server.takeRequest()
+        assertEquals("DELETE", removeCard.method)
+        assertEquals("/api/v1/decks/3/cards/10", removeCard.path)
+        val deleteDeck = server.takeRequest()
+        assertEquals("DELETE", deleteDeck.method)
+        assertEquals("/api/v1/decks/3", deleteDeck.path)
+        assertEquals(8, server.requestCount)
+    }
+
     /** Resolves deck cards from the search cache without making a second card API request. */
     @Test
     fun `loading decks reuses cards already cached by search`() = runTest {
@@ -144,5 +227,16 @@ class DeckRepositoryTest {
             {"id":10,"uuid":"a318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Counterspell"},
             {"id":11,"uuid":"0318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Lightning Bolt"}
         ]"""
+        const val EMPTY_DECK = """{"id":3,"userId":7,"name":"Burn","cards":[]}"""
+        const val EMPTY_DECK_RENAMED = """{"id":3,"userId":7,"name":"Burn v2","cards":[]}"""
+        const val SEARCHED_CARD = """{"content":[
+            {"id":10,"uuid":"0318d56b-647f-4b0f-9306-9adc3312619d","cardName":"Lightning Bolt"}
+        ],"page":{"size":20,"number":0,"totalElements":1,"totalPages":1}}"""
+        const val DECK_WITH_CARD = """{"id":3,"userId":7,"name":"Burn v2","cards":[
+            {"cardId":11,"quantity":2,"section":"MAINBOARD"}
+        ]}"""
+        const val DECK_WITH_SEARCHED_CARD = """{"id":3,"userId":7,"name":"Burn","cards":[
+            {"cardId":10,"quantity":1,"section":"MAINBOARD"}
+        ]}"""
     }
 }

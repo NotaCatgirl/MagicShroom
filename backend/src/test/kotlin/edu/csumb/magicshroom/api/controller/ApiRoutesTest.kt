@@ -201,6 +201,34 @@ class ApiRoutesTest(@Autowired private val mockMvc: MockMvc) {
 		}
 	}
 
+	/** Creates a deck for its caller and keeps it hidden from other users. */
+	@Test
+	@DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+	fun `created deck belongs only to its owner`() {
+		val createdDeck = mockMvc.post("/api/v1/decks") {
+			header("X-Stub-User-Id", "2")
+			json("""{"name":"Private Test Deck"}""")
+		}.andExpect {
+			status { isCreated() }
+			jsonPath("$.id") { isNumber() }
+			jsonPath("$.userId") { value(2) }
+			jsonPath("$.name") { value("Private Test Deck") }
+			jsonPath("$.cards.length()") { value(0) }
+		}.andReturn()
+		val deckId = createdDeck.response.getHeader("Location")
+			?.substringAfterLast('/')
+			?: error("The created deck must include a Location header.")
+
+		mockMvc.get("/api/v1/decks/$deckId") { header("X-Stub-User-Id", playerTwo) }.andExpect {
+			status { isNotFound() }
+		}
+		mockMvc.get("/api/v1/decks/$deckId") { header("X-Stub-User-Id", "2") }.andExpect {
+			status { isOk() }
+			jsonPath("$.userId") { value(2) }
+			jsonPath("$.name") { value("Private Test Deck") }
+		}
+	}
+
 	/** Rejects an unknown test caller on the personal-decks route. */
 	@Test
 	fun `unknown caller cannot list decks`() {

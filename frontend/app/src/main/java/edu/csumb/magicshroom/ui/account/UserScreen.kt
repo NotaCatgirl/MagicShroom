@@ -74,6 +74,7 @@ fun UserScreen(
     errorMessage: String? = null,
     modifier: Modifier = Modifier,
     onAdminClick: (() -> Unit)? = null,
+    onDecksClick: (() -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
     var isSigningOut by remember { mutableStateOf(false) }
@@ -158,6 +159,16 @@ fun UserScreen(
             }
 
             Spacer(modifier = Modifier.height(28.dp))
+            if (onDecksClick != null) {
+                OutlinedButton(
+                    onClick = onDecksClick,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Text("My decks", fontSize = 18.sp)
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
             OutlinedButton(
                 onClick = {
                     if (!isSigningOut) scope.launch {
