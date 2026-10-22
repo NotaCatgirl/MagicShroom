@@ -1,9 +1,9 @@
 package edu.csumb.magicshroom.data.repository
 
 import edu.csumb.magicshroom.data.api.CardDto
+import edu.csumb.magicshroom.data.api.DeckCardCreateDto
 import edu.csumb.magicshroom.data.api.DeckDto
 import edu.csumb.magicshroom.data.api.DeckCreateDto
-import edu.csumb.magicshroom.data.api.DeckCardCreateDto
 import edu.csumb.magicshroom.data.api.DeckCardPatchDto
 import edu.csumb.magicshroom.data.api.DeckPatchDto
 import edu.csumb.magicshroom.data.api.DeckSection
@@ -74,6 +74,28 @@ class DeckRepository(private val api: MagicShroomApi, private val cards: CardRep
             )
         }
         return ApiResult.Success(resolved)
+    }
+
+    /** Adds a card and returns the deck updated from the API's authoritative deck-entry response. */
+    suspend fun addCardToDeck(
+        deck: ResolvedDeck,
+        cardId: Long,
+        quantity: Int = 1,
+        section: DeckSection = DeckSection.MAINBOARD,
+    ): ApiResult<ResolvedDeck> {
+        val cardResult = cards.getCard(cardId)
+        if (cardResult is ApiResult.Failure) return cardResult
+        val card = (cardResult as ApiResult.Success).data
+
+        val addResult = apiCall {
+            api.addCardToMyDeck(deck.id, DeckCardCreateDto(cardId, quantity, section))
+        }
+        if (addResult is ApiResult.Failure) return addResult
+
+        val entry = (addResult as ApiResult.Success).data
+        return ApiResult.Success(
+            deck.copy(cards = deck.cards + ResolvedDeckCard(card, entry.quantity, entry.section)),
+        )
     }
 }
 

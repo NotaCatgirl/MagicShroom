@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -81,6 +82,8 @@ fun CardDetailScreen(cardId: Long, onBack: () -> Unit) {
 @Composable
 fun CardDetailContent(card: CardDto, onBack: () -> Unit) {
     var faceIndex by remember(card.id) { mutableIntStateOf(0) }
+    var legalitiesExpanded by remember(card.id) { mutableStateOf(false) }
+    var rulingsExpanded by remember(card.id) { mutableStateOf(false) }
     val face = card.imageFaces.getOrNull(faceIndex)
     val imageUrl = face?.normalUrl
     var imageFailed by remember(imageUrl) { mutableStateOf(false) }
@@ -118,7 +121,14 @@ fun CardDetailContent(card: CardDto, onBack: () -> Unit) {
                         contentDescription = "${face.name} card face",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.fillMaxSize(),
-                        onError = { imageFailed = true },
+                        onError = {
+                            android.util.Log.e(
+                                "MagicShroomImage",
+                                "Failed to load $imageUrl",
+                                it.result.throwable,
+                            )
+                            imageFailed = true
+                        },
                     )
                 } else {
                     Text(card.cardName, modifier = Modifier.padding(24.dp), style = MaterialTheme.typography.headlineSmall)
@@ -134,16 +144,79 @@ fun CardDetailContent(card: CardDto, onBack: () -> Unit) {
                 }
             }
             Text(card.cardName, style = MaterialTheme.typography.headlineSmall)
-            card.manaCost?.let { Text(it, color = BrandPurple) }
+            card.manaCost?.takeIf(String::isNotBlank)?.let { manaCost ->
+                Text("Mana cost", style = MaterialTheme.typography.labelLarge)
+                Text(manaCost, color = BrandPurple)
+            }
             val typeLine = (card.supertypes + card.types).joinToString(" ") +
                 card.subtypes.takeIf { it.isNotEmpty() }?.joinToString(" — ", prefix = " — ").orEmpty()
             Text(typeLine.trim(), style = MaterialTheme.typography.titleMedium)
             card.text?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            DetailDropdownSection(
+                title = "Legalities",
+                expanded = legalitiesExpanded,
+                onToggle = { legalitiesExpanded = !legalitiesExpanded },
+            ) {
+                if (card.legalities.isEmpty()) {
+                    Text("No legality information available.")
+                } else {
+                    card.legalities.forEach { legality ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(legality.format.replaceFirstChar(Char::uppercase), modifier = Modifier.weight(1f))
+                            Text(legality.status.name.replace('_', ' '), color = BrandPurple)
+                        }
+                    }
+                }
+            }
+            DetailDropdownSection(
+                title = "Rulings",
+                expanded = rulingsExpanded,
+                onToggle = { rulingsExpanded = !rulingsExpanded },
+            ) {
+                if (card.rulings.isEmpty()) {
+                    Text("No rulings available.")
+                } else {
+                    card.rulings.forEach { ruling ->
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            ruling.date?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = BrandPurple) }
+                            Text(ruling.text)
+                        }
+                    }
+                }
+            }
             Text(
                 "MagicShroom is unofficial fan content. Card images and related materials are © Wizards of the Coast LLC; this app is not endorsed by Wizards.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+/** Expandable detail section used for optional card information. */
+@Composable
+private fun DetailDropdownSection(
+    title: String,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedButton(onClick = onToggle, modifier = Modifier.fillMaxWidth()) {
+            Text(if (expanded) "$title  ▲" else "$title  ▼")
+        }
+        if (expanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                content()
+            }
         }
     }
 }
