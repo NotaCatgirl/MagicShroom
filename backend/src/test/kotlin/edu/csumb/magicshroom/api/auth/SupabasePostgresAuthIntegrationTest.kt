@@ -6,6 +6,7 @@ import com.nimbusds.jose.crypto.RSASSASigner
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
+import edu.csumb.magicshroom.api.repository.SimilarCardFixtures
 import io.restassured.RestAssured.given
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -190,6 +191,35 @@ class SupabasePostgresAuthIntegrationTest {
         assertEquals("Bearer test-admin-key", deletionRequest?.getHeader("Authorization"))
     }
 
+    /** Ranks similar cards in PostgreSQL exactly like the Kotlin rules, on a route that needs no token. */
+    @Test
+    fun `postgres similar cards match the kotlin ranking without a token`() {
+        val ids = mutableListOf<Long>()
+        try {
+            SimilarCardFixtures.cards.forEach { card ->
+                ids += jdbc.queryForObject(
+                    """insert into cards (uuid, card_name, color_identity, colors, converted_mana_cost, types, subtypes, edhrec_rank, scryfall_oracle_id, power, toughness)
+                        values (?, ?, ?::text[], ?::text[], ?, ?::text[], ?::text[], ?, ?, ?, ?) returning id""",
+                    Long::class.java,
+                    UUID.randomUUID(), card.cardName, textArray(card.colorIdentity.map { it.name }),
+                    textArray(card.colors.map { it.name }), card.convertedManaCost, textArray(card.types),
+                    textArray(card.subtypes), card.edhrecRank, card.scryfallOracleId, card.power, card.toughness,
+                )!!
+            }
+            val baseId = ids[SimilarCardFixtures.cards.indexOfFirst { it.cardName == SimilarCardFixtures.BASE }]
+            val response = given().port(port).queryParam("limit", 30).get("/api/v1/cards/$baseId/similar")
+            assertEquals(200, response.statusCode())
+            val fixtureNames = SimilarCardFixtures.cards.map { it.cardName }.toSet()
+            val names = response.jsonPath().getList<String>("cardName")
+            assertEquals(SimilarCardFixtures.expectedOrder, names.filter { it in fixtureNames })
+            assertEquals(500, response.jsonPath().getInt("find { it.cardName == 'Twin Elf' }.edhrecRank"))
+            assertEquals("2", response.jsonPath().getString("find { it.cardName == 'Twin Elf' }.power"))
+            assertEquals("3", response.jsonPath().getString("find { it.cardName == 'Twin Elf' }.toughness"))
+        } finally {
+            if (ids.isNotEmpty()) jdbc.update("delete from cards where id in (${ids.joinToString()})")
+        }
+    }
+
     /** Builds an RS256 JWT containing the Supabase claims required by the production decoder. */
     private fun token(
         subject: UUID,
@@ -211,6 +241,9 @@ class SupabasePostgresAuthIntegrationTest {
             .apply { sign(RSASSASigner(signer)) }
             .serialize()
     }
+
+    /** Formats a PostgreSQL text-array literal for values without commas or quotes. */
+    private fun textArray(values: List<String>): String = values.joinToString(",", prefix = "{", postfix = "}")
 
     /** Returns a representative card payload covering PostgreSQL arrays and JSONB fields. */
     private fun cardBody(uuid: UUID, name: String): String = """{

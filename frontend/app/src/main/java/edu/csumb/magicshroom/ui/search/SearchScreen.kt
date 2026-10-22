@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import edu.csumb.magicshroom.data.api.CardDto
+import edu.csumb.magicshroom.ui.components.FanContentNotice
 import edu.csumb.magicshroom.ui.components.MagicShroomLogo
 import edu.csumb.magicshroom.ui.theme.AppBackground
 import edu.csumb.magicshroom.ui.theme.BorderLavender
@@ -292,11 +293,7 @@ fun SearchContent(
                             }
                         }
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            Text(
-                                "MagicShroom is unofficial fan content. Card images and related materials are © Wizards of the Coast LLC; this app is not endorsed by Wizards.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodySmall,
-                            )
+                            FanContentNotice()
                         }
                     }
                 }
@@ -315,9 +312,9 @@ private fun SearchError(message: String, onRetry: () -> Unit) {
     }
 }
 
-/** Renders one card scan with a text fallback when the image is missing or unavailable. */
+/** Renders one card scan with a text fallback when the image is missing or unavailable. Shared by card lists. */
 @Composable
-private fun SearchCardTile(card: CardDto, onClick: () -> Unit) {
+internal fun SearchCardTile(card: CardDto, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()

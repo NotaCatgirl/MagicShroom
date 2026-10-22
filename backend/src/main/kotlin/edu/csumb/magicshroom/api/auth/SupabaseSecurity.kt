@@ -63,6 +63,7 @@ class SupabaseSecurity(
                     HttpMethod.GET,
                     "/api/v1/cards",
                     "/api/v1/cards/*",
+                    "/api/v1/cards/*/similar",
                     "/actuator/health",
                     "/swagger-ui.html",
                     "/swagger-ui/**",

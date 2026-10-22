@@ -51,6 +51,13 @@ class CardController(private val cardService: CardService) {
 	@PostMapping("/batch")
 	fun batch(@Valid @RequestBody request: CardBatchRequest): List<Card> = cardService.getBatch(request.cardIds)
 
+	/** Up to [limit] cards most like this one, best first. Public. */
+	@GetMapping("/{cardId}/similar")
+	fun similar(
+		@PathVariable @Min(1) cardId: Long,
+		@RequestParam(defaultValue = "10") @Min(1) @Max(30) limit: Int,
+	): List<Card> = cardService.similar(cardId, limit)
+
 	/** Creates a card and returns it with a `Location` header. Admin only. */
 	@PostMapping
 	fun create(user: CurrentUser, @Valid @RequestBody input: CardInput): ResponseEntity<Card> {

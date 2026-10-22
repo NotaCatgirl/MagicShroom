@@ -34,6 +34,10 @@ interface MagicShroomApi {
     @POST("api/v1/cards/batch")
     suspend fun getCardsBatch(@Body request: CardBatchRequestDto): List<CardDto>
 
+    /** Up to [limit] cards most like card [cardId], best first. Public. */
+    @GET("api/v1/cards/{cardId}/similar")
+    suspend fun getSimilarCards(@Path("cardId") cardId: Long, @Query("limit") limit: Int? = null): List<CardDto>
+
     /** Creates a card. Admin only. */
     @POST("api/v1/cards")
     suspend fun createCard(@Body card: CardInputDto): CardDto

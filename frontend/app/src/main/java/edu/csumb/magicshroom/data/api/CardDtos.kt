@@ -31,6 +31,14 @@ data class CardDto(
     val purchaseUrls: List<PurchaseUrlDto> = emptyList(),
     val rulings: List<RulingDto> = emptyList(),
     val imageFaces: List<CardImageFaceDto> = emptyList(),
+    /** Printed power, as text because of values such as `*`; null if the card has none or the server is older. */
+    val power: String? = null,
+    /** Printed toughness, as text like [power]. */
+    val toughness: String? = null,
+    /** A planeswalker's starting loyalty, as text. */
+    val loyalty: String? = null,
+    /** EDHREC popularity rank; lower is more popular, null if unranked. */
+    val edhrecRank: Int? = null,
 )
 
 /** A full-card scan from the representative printing, in display order. */

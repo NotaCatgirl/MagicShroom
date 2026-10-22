@@ -71,6 +71,22 @@ class ApiRoutesTest(@Autowired private val mockMvc: MockMvc) {
 		}
 	}
 
+	/** Returns printed stats and popularity, keeping values such as `*` as text. */
+	@Test
+	fun `card responses include printed stats and popularity`() {
+		mockMvc.get("/api/v1/cards/4").andExpect {
+			status { isOk() }
+			jsonPath("$.power") { value("4") }
+			jsonPath("$.toughness") { value("4") }
+			jsonPath("$.edhrecRank") { value(4698) }
+		}
+		mockMvc.get("/api/v1/cards/20").andExpect {
+			status { isOk() }
+			jsonPath("$.power") { value("*") }
+			jsonPath("$.toughness") { value("1+*") }
+		}
+	}
+
 	/** Returns unique full card records in request order from the public batch route. */
 	@Test
 	fun `batch cards preserves request order and removes duplicate ids`() {
@@ -96,6 +112,60 @@ class ApiRoutesTest(@Autowired private val mockMvc: MockMvc) {
 		mockMvc.post("/api/v1/cards/batch") { json("""{"cardIds":[1,999]}""") }.andExpect {
 			status { isNotFound() }
 			jsonPath("$.detail") { value("Cards not found: 999.") }
+		}
+	}
+
+	/** Ranks same-color cards of the same type first, then closest mana value and shared creature types. */
+	@Test
+	fun `similar cards rank same colors and shared creature types first`() {
+		mockMvc.get("/api/v1/cards/3/similar").andExpect {
+			status { isOk() }
+			jsonPath("$.length()") { value(3) }
+			jsonPath("$[0].cardName") { value("Elvish Mystic") }
+			jsonPath("$[1].cardName") { value("Birds of Paradise") }
+			jsonPath("$[2].cardName") { value("Tarmogoyf") }
+		}
+	}
+
+	/** Lists cards sharing only some colors after every same-color match. */
+	@Test
+	fun `similar cards widen to shared colors after same colors`() {
+		mockMvc.get("/api/v1/cards/1/similar").andExpect {
+			status { isOk() }
+			jsonPath("$.length()") { value(2) }
+			jsonPath("$[0].cardName") { value("Smash to Smithereens") }
+			jsonPath("$[1].cardName") { value("Lightning Helix") }
+		}
+	}
+
+	/** Returns an empty list, rather than an error, when nothing is similar. */
+	@Test
+	fun `a card with no similar cards returns an empty list`() {
+		mockMvc.get("/api/v1/cards/4/similar").andExpect {
+			status { isOk() }
+			jsonPath("$.length()") { value(0) }
+		}
+	}
+
+	/** Applies limit, rejects limits outside 1-30, and reports an unknown card. */
+	@Test
+	fun `similar cards honor and validate the limit`() {
+		mockMvc.get("/api/v1/cards/3/similar?limit=1").andExpect {
+			status { isOk() }
+			jsonPath("$.length()") { value(1) }
+			jsonPath("$[0].cardName") { value("Elvish Mystic") }
+		}
+		mockMvc.get("/api/v1/cards/3/similar?limit=0").andExpect {
+			status { isBadRequest() }
+			jsonPath("$.detail") { value("limit must be greater than or equal to 1") }
+		}
+		mockMvc.get("/api/v1/cards/3/similar?limit=31").andExpect {
+			status { isBadRequest() }
+			jsonPath("$.detail") { value("limit must be less than or equal to 30") }
+		}
+		mockMvc.get("/api/v1/cards/999/similar").andExpect {
+			status { isNotFound() }
+			jsonPath("$.detail") { value("Card 999 was not found.") }
 		}
 	}
 

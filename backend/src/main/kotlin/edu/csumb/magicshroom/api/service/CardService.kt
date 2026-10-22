@@ -44,6 +44,9 @@ class CardService(
 		return uniqueIds.map(found::getValue)
 	}
 
+	/** Up to [limit] cards most like card [cardId], best first; 404 if the card does not exist. */
+	fun similar(cardId: Long, limit: Int): List<Card> = cardRepository.findSimilar(get(cardId), limit)
+
 	/** Adds a card to the catalog. Admin only; 409 if another card already has its uuid. */
 	fun create(user: CurrentUser, input: CardInput): Card {
 		user.requireAdmin()

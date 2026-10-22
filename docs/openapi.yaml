@@ -244,6 +244,44 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /api/v1/cards/{cardId}/similar:
+    parameters:
+      - $ref: '#/components/parameters/CardId'
+    get:
+      tags: [Cards]
+      operationId: getSimilarCards
+      summary: List cards similar to a card
+      description: >-
+        Cards that share a main type with the card, best match first, excluding the card's other
+        faces (rows with the same scryfallOracleId). Cards with the same color identity come first,
+        then cards sharing at least one color; within each, the closest mana value, the most shared
+        subtypes, and the most popular (lowest EDHREC rank) come first, with lower id breaking ties.
+      security: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of cards to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 30
+            default: 10
+      responses:
+        '200':
+          description: Similar cards, best match first; empty if there are none
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/decks:
     get:
       tags: [Decks]
@@ -777,6 +815,30 @@ components:
           description: Full-card scans from one representative Scryfall printing; empty if unavailable.
           items:
             $ref: '#/components/schemas/CardImageFace'
+        power:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Printed power; text because of values such as `*`. Null for cards without one.
+          example: '4'
+        toughness:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Printed toughness; text like power.
+          example: '4'
+        loyalty:
+          type: string
+          nullable: true
+          readOnly: true
+          description: A planeswalker's starting loyalty.
+          example: '3'
+        edhrecRank:
+          type: integer
+          nullable: true
+          readOnly: true
+          description: EDHREC popularity rank; lower is more popular. Null if unranked.
+          example: 4698
       allOf:
         - $ref: '#/components/schemas/CardInput'
 

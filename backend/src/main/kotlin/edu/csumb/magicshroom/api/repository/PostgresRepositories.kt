@@ -19,7 +19,7 @@ import java.util.UUID
 @Repository
 @Profile("!mock")
 class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: JsonMapper) : CardRepository {
-    private val columns = "id, uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings, (select faces from card_images where oracle_id = cards.scryfall_oracle_id) as image_faces"
+    private val columns = "id, uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings, (select faces from card_images where oracle_id = cards.scryfall_oracle_id) as image_faces, power, toughness, loyalty, edhrec_rank"
     private val fields = "uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings"
     private val values = "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb"
     private val mapper = RowMapper { rs: ResultSet, _: Int ->
@@ -39,6 +39,8 @@ class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: J
             purchaseUrls = json.readValue(rs.getString("purchase_urls")),
             rulings = json.readValue(rs.getString("rulings")),
             imageFaces = rs.getString("image_faces")?.let { json.readValue(it) } ?: emptyList(),
+            power = rs.getString("power"), toughness = rs.getString("toughness"), loyalty = rs.getString("loyalty"),
+            edhrecRank = rs.getInt("edhrec_rank").takeUnless { rs.wasNull() },
         )
     }
 
@@ -87,6 +89,32 @@ class PostgresCardRepository(private val jdbc: JdbcTemplate, private val json: J
         val placeholders = uniqueIds.joinToString(",") { "?" }
         return jdbc.query("select $columns from cards where id in ($placeholders)", mapper, *uniqueIds.toTypedArray())
     }
+
+    /**
+     * Ranks similar cards in PostgreSQL with [SimilarCardRanking]'s rules, so a request never loads the
+     * whole catalog. The query reads the base card's row by `card.id` (only the id of the passed card is
+     * used) and skips other faces of it. `cards` must stay unaliased because [columns] refers to `cards.scryfall_oracle_id`.
+     */
+    override fun findSimilar(card: Card, limit: Int): List<Card> = jdbc.query(
+        """
+        with base as (
+            select id as base_id, color_identity as base_colors, types as base_types, subtypes as base_subtypes,
+                coalesce(converted_mana_cost, 0) as base_mana_value, scryfall_oracle_id as base_oracle_id
+            from cards where id = ?
+        )
+        select $columns from cards cross join base
+        where id <> base_id and types && base_types
+            and (base_oracle_id is null or scryfall_oracle_id is distinct from base_oracle_id)
+            and ((color_identity @> base_colors and color_identity <@ base_colors) or color_identity && base_colors)
+        order by case when color_identity @> base_colors and color_identity <@ base_colors then 0 else 1 end,
+            abs(coalesce(converted_mana_cost, 0) - base_mana_value),
+            cardinality(array(select unnest(subtypes) intersect select unnest(base_subtypes))) desc,
+            edhrec_rank asc nulls last,
+            id
+        limit ?
+        """.trimIndent(),
+        mapper, card.id, limit,
+    )
 
     /** Finds a card by its stable archive UUID. */
     override fun findByUuid(uuid: UUID): Card? = jdbc.query("select $columns from cards where uuid = ?", mapper, uuid).firstOrNull()
