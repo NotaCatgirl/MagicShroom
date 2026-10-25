@@ -24,8 +24,8 @@ info:
 servers:
   - url: http://localhost:8080
     description: Local development
-  - url: https://your-api.example.com
-    description: Production placeholder; replace after deployment
+  - url: https://magicshroom.onrender.com
+    description: Production API on Render
 
 # Authentication is required unless an operation overrides this with security: [].
 security:
