@@ -15,7 +15,7 @@ export SUPABASE_URL='https://PROJECT_REF.supabase.co'
 ./gradlew bootRun
 ```
 
-With a filled-in `../.env`, the same is `set -a && . ../.env && set +a && ./gradlew bootRun`;
+With a filled-in `.env` in this directory, the same is `set -a && . ./.env && set +a && ./gradlew bootRun`;
 Spring Boot does not read `.env` files itself.
 
 The backend validates Supabase bearer tokens with the project's JWKS endpoint. Configure an
@@ -68,6 +68,10 @@ the returned image URLs directly and caches them on device.
 Do not set the import path in the Render service's normal start command.
 
 ## Docker
+
+From the repository root, fill in `backend/.env` from `.env.example` and run `docker compose up` to build
+and start the API at `http://localhost:8080` using your Supabase database. Docker must be running;
+use `docker compose up --build` to rebuild after backend changes.
 
 `docker build -t magicshroom-api .` builds a production JAR in a JDK 25 stage and runs it from a
 JRE 25 image. The image exposes `/actuator/health`; pass database and Supabase settings as runtime

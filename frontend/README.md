@@ -13,14 +13,14 @@ permissions. There is no email/password or demo-account login. Deck actions are 
 to the search screen yet.
 
 Open `frontend/` in Android Studio. The build reads these public Auth settings from the ignored
-`.env` in the repository root:
+`backend/.env`:
 
 ```properties
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-The existing names `supabaseUrl` and `supabasePublishableKey` also work in `.env`. After changing
+The existing names `supabaseUrl` and `supabasePublishableKey` also work in `backend/.env`. After changing
 these settings, rebuild and use Android Studio's full Run action so the installed app gets them.
 User-level Gradle properties (`~/.gradle/gradle.properties`) can override these values and set
 the backend address:

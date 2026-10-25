@@ -32,15 +32,21 @@ The Render API takes ~2 minutes to start up after being idle.
 
 ## Run it locally
 
-1. Copy `.env.example` to `.env` and fill in the Supabase values (never commit it). The backend
+1. Copy `.env.example` to `backend/.env` and fill in the Supabase values (never commit it). The backend
    reads the database settings and `SUPABASE_URL`; the app's build reads `SUPABASE_URL` and
    `SUPABASE_PUBLISHABLE_KEY`.
 2. Start the API from the repository root:
    ```bash
-   set -a && . ./.env && set +a && cd backend && ./gradlew bootRun
+   set -a && . ./backend/.env && set +a && cd backend && ./gradlew bootRun
    ```
    Spring Boot does not read `.env` itself; without the first part it fails with
    `Could not resolve placeholder 'SUPABASE_URL'`.
+   Alternatively, with Docker running and `backend/.env` filled in, start the container from the repository root:
+   ```bash
+   docker compose up
+   ```
+   This builds the backend image and exposes the API at `http://localhost:8080`, using your
+   configured Supabase database. Use `docker compose up --build` after backend changes.
 3. The app talks to the Render API by default (`backendUrl` in `frontend/gradle.properties`). To use
    the API from step 2, build with `-PbackendUrl=http://10.0.2.2:8080` (the emulator's address for
    your computer) or set `backendUrl` in `~/.gradle/gradle.properties`. See
