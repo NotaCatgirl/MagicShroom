@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.detekt)
 }
 
 // Read the public Auth settings from the ignored root .env; database credentials stay server-side.
@@ -63,6 +64,20 @@ android {
         compose = true
         buildConfig = true
     }
+}
+
+// Any finding not recorded in the baseline fails the build. Regenerate the baseline only when
+// deliberately accepting existing findings: ./gradlew :app:detektBaseline
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/baseline.xml")
+    ignoreFailures = false
+}
+
+// Unit tests that call the deployed Render API are skipped unless run with -PliveApiTests=true.
+tasks.withType<Test>().configureEach {
+    systemProperty("magicshroom.liveApiTests", providers.gradleProperty("liveApiTests").orElse("false").get())
 }
 
 dependencies {

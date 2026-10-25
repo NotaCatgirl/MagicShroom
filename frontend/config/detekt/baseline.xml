@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AppNavHost.kt:(user != null &amp;&amp; route == AppRoute.LOGIN) || (authState == AuthState.SignedOut &amp;&amp; (route == AppRoute.ACCOUNT || route == AppRoute.ADMIN || route == AppRoute.DECKS || route == AppRoute.DECK))</ID>
+    <ID>ComplexCondition:DeckScreens.kt:catalogQuery.trim().length &gt;= 2 &amp;&amp; !isSearchingCards &amp;&amp; matchingCards.isEmpty() &amp;&amp; cardSearchError == null</ID>
+    <ID>ComplexCondition:SearchViewModel.kt:SearchViewModel$current.isLoading || current.isLoadingMore || loadMoreJob?.isActive == true || !current.hasMore</ID>
+    <ID>CyclomaticComplexMethod:AppNavHost.kt:@Composable fun AppNavHost</ID>
+    <ID>CyclomaticComplexMethod:DeckScreens.kt:@Composable fun DeckDetailScreen</ID>
+    <ID>MagicNumber:SimilarCardsScreen.kt:404</ID>
+    <ID>MaxLineLength:CardComparisonScreen.kt:contentDescription = "${row.label}: $baseName ${spoken(row.baseValue)}, $otherName ${spoken(row.otherValue)}, ${style.word.lowercase()}"</ID>
+    <ID>MaxLineLength:CardDetailScreen.kt:"MagicShroom is unofficial fan content. Card images and related materials are © Wizards of the Coast LLC; this app is not endorsed by Wizards."</ID>
+    <ID>MaxLineLength:DeckScreens.kt:Column</ID>
+    <ID>MaxLineLength:DeckScreens.kt:private</ID>
+    <ID>MaxLineLength:FanContentNotice.kt:"MagicShroom is unofficial fan content. Card images and related materials are © Wizards of the Coast LLC; this app is not endorsed by Wizards."</ID>
+    <ID>MaxLineLength:SearchScreen.kt:if</ID>
+    <ID>NewLineAtEndOfFile:Type.kt:edu.csumb.magicshroom.ui.theme.Type.kt</ID>
+    <ID>ReturnCount:CardRepository.kt:CardRepository$suspend fun getCardsByIds: ApiResult&lt;List&lt;CardDto&gt;&gt;</ID>
+    <ID>SwallowedException:SupabaseAuthRepository.kt:SupabaseAuthRepository$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:SupabaseAuthRepository.kt:SupabaseAuthRepository$e: Exception</ID>
+  </CurrentIssues>
+</SmellBaseline>

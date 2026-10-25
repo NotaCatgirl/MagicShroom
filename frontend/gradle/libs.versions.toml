@@ -16,6 +16,9 @@ okhttp = "4.12.0"
 kotlinxSerialization = "1.9.0"
 kotlinxCoroutines = "1.10.2"
 coil = "3.4.0"
+# detekt 1.23.8 cannot run on the JDK 25 toolchain (its compiler rejects --jvm-target 25), so this is
+# the 2.0 line. Keep the backend's detekt plugin on the same version.
+detekt = "2.0.0-alpha.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -47,3 +50,4 @@ coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp"
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
