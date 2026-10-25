@@ -9,8 +9,11 @@ Configure the backend and its Scryfall image metadata import as described in
 The top-right Log in button opens Google sign-in through Supabase Auth. Signed-in users get an
 Account button with read-only profile information and sign-out. Admin tools are available only
 when the backend confirms the signed-in user has the ADMIN role; the backend enforces admin
-permissions. There is no email/password or demo-account login. Deck actions are not connected
-to the search screen yet.
+permissions. There is no email/password or demo-account login. Open My decks from Account to
+create, rename, or delete decks and add or remove catalog cards.
+
+See the [app screenshot gallery](../README.md#app-screenshots) for browsing, comparison,
+account/admin tools, and deck management.
 
 Open `frontend/` in Android Studio. The build reads these public Auth settings from the ignored
 `backend/.env`:
