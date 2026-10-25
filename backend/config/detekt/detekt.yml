@@ -1,0 +1,61 @@
+# detekt ruleset for the Spring Boot API. Applied on top of detekt's defaults
+# (buildUponDefaultConfig = true in build.gradle.kts), where ignoreFailures = false makes any
+# finding not listed in config/detekt/baseline.xml fail the build.
+#
+# Rule property names follow detekt 2.x (allowedLines, allowedFunctionParameters, allowedComplexity,
+# allowedDepth); 2.x has no `build: maxIssues:` key.
+
+complexity:
+  active: true
+  LongMethod:
+    active: true
+    allowedLines: 60
+    # Integration tests read as one scripted scenario against the real HTTP API.
+    excludes: ['**/test/**']
+  LongParameterList:
+    active: true
+    allowedFunctionParameters: 6
+  CyclomaticComplexMethod:
+    active: true
+    allowedComplexity: 15
+  NestedBlockDepth:
+    active: true
+    allowedDepth: 4
+
+style:
+  active: true
+  MagicNumber:
+    active: true
+    ignoreNumbers: ['-1', '0', '1', '2']
+    # @Max(100) / @Min(1) bounds on request parameters name themselves.
+    ignoreAnnotation: true
+    # JDBC binds parameters by position: ps.setString(5, ...) is an index, not a magic number.
+    excludes: ['**/test/**', '**/repository/PostgresRepositories.kt', '**/importer/**']
+  MaxLineLength:
+    active: true
+    # 140 rather than the 120 default: 45 lines of the existing main sources exceed 120, most of them
+    # single-line SQL. Test fixtures hold request bodies and SQL on one line.
+    maxLineLength: 140
+    excludes: ['**/test/**']
+  ReturnCount:
+    active: true
+    max: 3
+  UnusedPrivateFunction:
+    active: true
+  UnusedPrivateProperty:
+    active: true
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: true
+  TooGenericExceptionThrown:
+    active: true
+  SwallowedException:
+    active: true
+
+potential-bugs:
+  active: true
+
+naming:
+  active: true

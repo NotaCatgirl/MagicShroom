@@ -4,6 +4,8 @@ plugins {
 	id("org.springframework.boot") version "4.1.1"
 	id("io.spring.dependency-management") version "1.1.7"
 	jacoco
+	// Same version as the Android app's detekt (frontend/gradle/libs.versions.toml).
+	id("dev.detekt") version "2.0.0-alpha.6"
 }
 
 group = "edu.csumb.magicshroom"
@@ -52,6 +54,25 @@ kotlin {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+// Any finding not recorded in the baseline fails the build. Regenerate the baseline only when
+// deliberately accepting existing findings: ./gradlew detektBaseline
+detekt {
+	buildUponDefaultConfig = true
+	config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+	baseline = file("$rootDir/config/detekt/baseline.xml")
+	ignoreFailures = false
+}
+
+// The Spring dependency-management plugin pins every org.jetbrains.kotlin artifact to the app's Kotlin
+// version, including detekt's own compiler, which then refuses to run. Give detekt the Kotlin it was built with.
+configurations.matching { it.name == "detekt" }.configureEach {
+	resolutionStrategy.eachDependency {
+		if (requested.group == "org.jetbrains.kotlin") {
+			useVersion(dev.detekt.gradle.plugin.getSupportedKotlinVersion())
+		}
+	}
 }
 
 jacoco {

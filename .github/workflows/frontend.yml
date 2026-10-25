@@ -20,4 +20,6 @@ jobs:
           distribution: temurin
           java-version: "25"
       - uses: gradle/actions/setup-gradle@v6
-      - run: ./gradlew :app:testDebugUnitTest :app:assembleDebug
+      # detekt fails the job on any finding not in config/detekt/baseline.xml. The backend workflow
+      # gets detekt from `./gradlew build`, whose check task depends on it.
+      - run: ./gradlew :app:detekt :app:testDebugUnitTest :app:assembleDebug

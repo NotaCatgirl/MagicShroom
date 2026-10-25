@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:CardDtos.kt:CardPatch$fun applyTo: Card</ID>
+    <ID>EmptyFunctionBlock:MagicShroomApplicationTests.kt:MagicShroomApplicationTests${ }</ID>
+    <ID>MatchingDeclarationName:UserDtos.kt:UserPatch</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresCardRepository$if (name != null) { terms += "card_name ilike ? escape '\\'"; args += "%${name.trim().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")}%" }</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresCardRepository$jdbc.update({ con -&gt; con.prepareStatement("insert into cards ($fields) values ($values)", arrayOf("id")).also { bind(it, card) } }, keys)</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresCardRepository$jdbc.update({ con -&gt; con.prepareStatement("update cards set $assignments where id = ?").also { bind(it, card); it.setLong(17, card.id) } })</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresCardRepository$private val columns = "id, uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings, (select faces from card_images where oracle_id = cards.scryfall_oracle_id) as image_faces, power, toughness, loyalty, edhrec_rank"</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresCardRepository$private val fields = "uuid, card_name, color_identity, colors, converted_mana_cost, mana_cost, scryfall_oracle_id, card_text, types, subtypes, supertypes, printings, foreign_data, legalities, purchase_urls, rulings"</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresDeckCardRepository$override</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresDeckCardRepository$private val mapper = RowMapper { rs: ResultSet, _: Int -&gt; DeckCard(rs.getLong("deck_id"), rs.getLong("card_id"), rs.getInt("quantity"), DeckSection.valueOf(rs.getString("section"))) }</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresDeckRepository$override</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresUserRepository$jdbc.query("update app_users set role = ? where id = ? returning id, email, display_name, role", mapper, role.name, id).firstOrNull()</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresUserRepository$override</ID>
+    <ID>MaxLineLength:PostgresRepositories.kt:PostgresUserRepository$private val mapper = RowMapper { rs: ResultSet, _: Int -&gt; User(rs.getLong("id"), rs.getString("email"), rs.getString("display_name"), Role.valueOf(rs.getString("role"))) }</ID>
+    <ID>MaxLineLength:ScryfallImageImporter.kt:ScryfallImageImporter$val oracleIds = jdbc.queryForList("select distinct scryfall_oracle_id from cards where scryfall_oracle_id is not null", UUID::class.java).toSet()</ID>
+    <ID>MaxLineLength:SimilarCardRanking.kt:SimilarCardRanking$it.id != base.id &amp;&amp; (base.scryfallOracleId == null || it.scryfallOracleId != base.scryfallOracleId) &amp;&amp; it.types.any(base.types::contains) &amp;&amp; tier(it) != null</ID>
+    <ID>MaxLineLength:SupabaseSecurity.kt:SupabaseSecurity$if</ID>
+    <ID>ReturnCount:ScryfallImageImporter.kt:ScryfallImageMapper$fun map: ScryfallImage?</ID>
+    <ID>SwallowedException:SupabaseAuthAdminClient.kt:SupabaseRestAuthAdminClient$exception: RestClientException</ID>
+    <ID>ThrowsCount:SupabaseSecurity.kt:SupabaseCurrentUserResolver$override fun resolveArgument: CurrentUser</ID>
+    <ID>TooGenericExceptionCaught:MagicShroomApplication.kt:MagicShroomApplication$exception: Exception</ID>
+    <ID>TooManyFunctions:PostgresRepositories.kt:PostgresCardRepository : CardRepository</ID>
+    <ID>WildcardImport:PostgresRepositories.kt:import edu.csumb.magicshroom.api.model.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

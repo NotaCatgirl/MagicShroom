@@ -77,6 +77,10 @@ loader (`MagicShroomApplication`) sends its own.
 ./gradlew :app:connectedDebugAndroidTest   # with an emulator running
 ```
 
+`CardImageLinksIntegrationTest` calls the deployed Render API, so it is skipped unless you opt in
+with `./gradlew :app:testDebugUnitTest -PliveApiTests=true`. The free Render instance sleeps when idle
+and has taken about 1.5–3 minutes to answer on a cold start, which is why CI does not run it.
+
 For admin screens on mock data, run `cd backend && ./gradlew bootTestRun` and build with
 `-PbackendUrl=http://10.0.2.2:8080 -PstubUserId=1`. After a Google sign-in, the mock backend treats
 every request as user 1, the admin.

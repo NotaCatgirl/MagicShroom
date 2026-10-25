@@ -1,0 +1,77 @@
+# detekt ruleset for the Android app (Jetpack Compose). Applied on top of detekt's defaults
+# (buildUponDefaultConfig = true in app/build.gradle.kts), where ignoreFailures = false makes any
+# finding not listed in config/detekt/baseline.xml fail the build.
+#
+# Rule property names follow detekt 2.x (allowedLines, allowedFunctionParameters, allowedComplexity,
+# allowedDepth); 2.x has no `build: maxIssues:` key.
+
+complexity:
+  active: true
+  LongMethod:
+    active: true
+    allowedLines: 60
+    # A declarative UI tree is long by nature; splitting a composable purely for line count produces
+    # single-use composables that obscure the layout. Still enforced for ViewModels and repositories.
+    ignoreAnnotated: ['Composable']
+    excludes: ['**/test/**', '**/androidTest/**']
+  LongParameterList:
+    active: true
+    allowedFunctionParameters: 6
+    # Composables legitimately take many parameters (state + one lambda per event).
+    ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    active: true
+    allowedComplexity: 15
+  NestedBlockDepth:
+    active: true
+    allowedDepth: 4
+  TooManyFunctions:
+    # Off: counts top-level composables in a screen file, which is not a smell.
+    active: false
+
+style:
+  active: true
+  MagicNumber:
+    active: true
+    ignoreNumbers: ['-1', '0', '1', '2']
+    # 16.dp / weight(1f) are self-documenting layout literals.
+    ignoreAnnotated: ['Composable']
+    # Enum entries such as BETTER("▲", "Better", Color(0xFF1B5E20)) name their own values.
+    ignoreEnums: true
+    excludes: ['**/test/**', '**/androidTest/**']
+  MaxLineLength:
+    active: true
+    # 140 rather than the 120 default: 40 lines of the existing main sources exceed 120, only 7
+    # exceed 140. Test fixtures hold JSON captured from the API on one line.
+    maxLineLength: 140
+    excludes: ['**/test/**', '**/androidTest/**']
+  ReturnCount:
+    active: true
+    max: 3
+  UnusedPrivateFunction:
+    active: true
+  UnusedPrivateProperty:
+    active: true
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: true
+  TooGenericExceptionThrown:
+    active: true
+  SwallowedException:
+    active: true
+
+potential-bugs:
+  active: true
+
+naming:
+  active: true
+  FunctionNaming:
+    active: true
+    # @Composable functions are PascalCase by Compose convention.
+    ignoreAnnotated: ['Composable']
+  MatchingDeclarationName:
+    # Off: screen files are named after their main composable (SearchScreen.kt) while their only
+    # class-like declaration is the XxxTestTags object the UI tests use.
+    active: false
