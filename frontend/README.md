@@ -9,18 +9,21 @@ Configure the backend and its Scryfall image metadata import as described in
 The top-right Log in button opens Google sign-in through Supabase Auth. Signed-in users get an
 Account button with read-only profile information and sign-out. Admin tools are available only
 when the backend confirms the signed-in user has the ADMIN role; the backend enforces admin
-permissions. There is no email/password or demo-account login. Deck actions are not connected
-to the search screen yet.
+permissions. There is no email/password or demo-account login. Open My decks from Account to
+create, rename, or delete decks and add or remove catalog cards.
+
+See the [app screenshot gallery](../README.md#app-screenshots) for browsing, comparison,
+account/admin tools, and deck management.
 
 Open `frontend/` in Android Studio. The build reads these public Auth settings from the ignored
-`.env` in the repository root:
+`backend/.env`:
 
 ```properties
 SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-The existing names `supabaseUrl` and `supabasePublishableKey` also work in `.env`. After changing
+The existing names `supabaseUrl` and `supabasePublishableKey` also work in `backend/.env`. After changing
 these settings, rebuild and use Android Studio's full Run action so the installed app gets them.
 User-level Gradle properties (`~/.gradle/gradle.properties`) can override these values and set
 the backend address:

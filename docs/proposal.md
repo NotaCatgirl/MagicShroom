@@ -13,105 +13,81 @@ MagicShroom is an API that contains all magic cards in existance. It allows user
 | Card     | id, cardName, colorIdentity, colors, convertedManaCost, foreignData, legalities, manaCost, printings, purchaseUrls, rulings, scryfallOracleId, subtypes, supertypes, text, types, uuid | A card has many information fields                  |
 
 ## 3. ER sketch
+
+Matches Flyway migrations V1–V3; only the referenced ID is shown for Supabase-managed `auth.users`, and the card image relationship is an Oracle ID lookup without a foreign key.
+
 ```mermaid
 erDiagram
-    USER  ||--o{ DECK : owns
-    USER ||--o{ ADMIN : "has admin role"
-    DECK ||--o{ DECK_CARD : contains
-    CARD ||--o{ DECK_CARD : included_in
-    CARD {
-        bigint id PK
-        string cardName
-        int convertedManaCost
-        string layout
-        string manaCost
-        string scryfallOracleId
-        string text
-        string type
-        string uuid
+    "auth.users" ||..o| app_users : authenticates
+    app_users ||..o{ decks : owns
+    decks ||--o{ deck_cards : contains
+    cards ||--o{ deck_cards : included_in
+    card_images |o..o{ cards : "matches scryfall_oracle_id (no FK)"
+
+    "auth.users" {
+        uuid id PK
     }
-    DECK {
+    app_users {
+        bigint id PK
+        uuid auth_user_id FK, UK
+        text email
+        text display_name
+        text role "USER or ADMIN"
+    }
+    decks {
         bigint id PK
         bigint user_id FK
-        bigint deck_id FK
-        string name
+        varchar(100) name
     }
-    DECK_CARD {
+    deck_cards {
+        bigint deck_id PK, FK
+        bigint card_id PK, FK
+        integer quantity "Greater than zero"
+        text section
+    }
+    cards {
         bigint id PK
-        bigint deckId FK
-        bigint cardId FK
-        int quantity
-        string section
+        uuid uuid UK
+        text card_name
+        text[] color_identity
+        text[] colors
+        float8 converted_mana_cost
+        text mana_cost
+        uuid scryfall_oracle_id
+        text card_text
+        text[] types
+        text[] subtypes
+        text[] supertypes
+        text[] printings
+        jsonb foreign_data
+        jsonb legalities
+        jsonb purchase_urls
+        jsonb rulings
+        text[] color_indicator
+        integer edhrec_rank
+        float8 face_converted_mana_cost
+        text hand
+        boolean has_no_deck_limit
+        boolean is_reserved
+        text layout
+        jsonb leadership_skills
+        text life
+        text loyalty
+        integer mtg_arena_id
+        integer mtgo_foil_id
+        integer mtgo_id
+        text[] names
+        text power
+        text side
+        text toughness
+        text card_type
     }
-    USER {
-        bigint id PK
-        string email UK
-        string name
-        string displayName
-    }
-    ADMIN {
-        bigint userId PK, FK
-    }
-    CARD ||--|{ COLOR_IDENTITY : has
-    COLOR_IDENTITY {
-        bigint id PK
-        bigint cardId FK
-        string color_identity UK
-    }
-    CARD ||--|{ COLOR : has
-    COLOR {
-        bigint id PK
-        bigint cardId FK
-        string color UK
-    }
-    CARD ||--|{ FOREIGN_DATA : has
-    FOREIGN_DATA {
-        bigint id PK
-        bigint cardId FK
-        string foreignData
-    }
-    CARD ||--o{ LEGALITY : has
-    LEGALITY {
-        bigint id PK
-        bigint cardId FK
-        string legality
-    }
-    CARD ||--|{ PRINTING : has
-    PRINTING {
-        bigint id PK
-        bigint cardId FK
-        string printing
-    }
-    CARD ||--o{ PURCHASE_URL : has
-    PURCHASE_URL {
-        bigint id PK
-        bigint cardId FK
-        string vendor
-        string url
-    }
-    CARD ||--o{ RULING : has
-    RULING {
-        bigint id PK
-        bigint cardId FK
-        string ruling
-    }
-    CARD ||--o{ SUBTYPE : has
-    SUBTYPE {
-        bigint id PK
-        bigint cardId FK
-        string subtype
-    }
-    CARD ||--o{ SUPERTYPE : has
-    SUPERTYPE {
-        bigint id PK
-        bigint cardId FK
-        string supertype
-    }
-    CARD ||--o{ TYPES : has
-    TYPES {
-        bigint id PK
-        bigint cardId FK
-        string type
+    card_images {
+        uuid oracle_id PK
+        uuid scryfall_card_id
+        text set_code
+        jsonb faces
+        timestamptz synced_at
     }
 ```
 

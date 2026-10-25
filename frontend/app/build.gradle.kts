@@ -7,9 +7,9 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
-// Read the public Auth settings from the ignored root .env; database credentials stay server-side.
-val rootEnv = Properties().apply {
-    load(providers.fileContents(rootProject.layout.projectDirectory.file("../.env"))
+// Read only the public Auth settings from backend/.env; database credentials stay server-side.
+val backendEnv = Properties().apply {
+    load(providers.fileContents(rootProject.layout.projectDirectory.file("../backend/.env"))
         .asText.orElse("").get().reader())
 }
 
@@ -29,10 +29,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         val supabaseUrl = providers.gradleProperty("supabaseUrl").orElse(
-            rootEnv.getProperty("SUPABASE_URL") ?: rootEnv.getProperty("supabaseUrl") ?: "https://example.supabase.co",
+            backendEnv.getProperty("SUPABASE_URL") ?: backendEnv.getProperty("supabaseUrl") ?: "https://example.supabase.co",
         ).get().trim().removeSurrounding("\"").removeSurrounding("'")
         val supabaseKey = providers.gradleProperty("supabasePublishableKey").orElse(
-            rootEnv.getProperty("SUPABASE_PUBLISHABLE_KEY") ?: rootEnv.getProperty("supabasePublishableKey")
+            backendEnv.getProperty("SUPABASE_PUBLISHABLE_KEY") ?: backendEnv.getProperty("supabasePublishableKey")
                 ?: "sb_publishable_replace_me",
         ).get().trim().removeSurrounding("\"").removeSurrounding("'")
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
