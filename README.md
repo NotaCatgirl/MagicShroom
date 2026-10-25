@@ -4,6 +4,8 @@ MagicShroom is a Magic: The Gathering card catalog with personal decks and card 
 backend is a Kotlin/Spring Boot API on Supabase PostgreSQL, deployed to Render; the Android app uses
 Jetpack Compose and Supabase Auth.
 
+To test the app, launch it in the Android emulator and wait ~2 minutes for the Render API to spin up before using it.
+
 ## What works today
 
 | Area | Status |
@@ -15,6 +17,18 @@ Jetpack Compose and Supabase Auth.
 | Decks | Full deck API (create, rename, delete, add and remove cards). The app has the data layer but no deck screens yet. |
 | Admin | Users with the `ADMIN` role see Admin tools in the app: list users, change roles, and delete users (including their Supabase login when the server has the admin key). Promote the first admin with SQL; see below. |
 | Deployment | GitHub Actions tests every pull request; a push to `main` also publishes the API image to GHCR and asks Render to deploy it. |
+
+## API Endpoints:
+
+Base URL: [magicshroom.onrender.com](https://magicshroom.onrender.com)
+
+- `GET /api/v1/cards`
+- `GET /api/v1/cards?page=0&size=10` (paginated)
+- `GET /api/v1/cards/{cardId}`
+- `GET /api/v1/cards/{cardId}/similar`
+- `GET /api/v1/decks`
+
+The Render API takes ~2 minutes to start up after being idle.
 
 ## Run it locally
 
