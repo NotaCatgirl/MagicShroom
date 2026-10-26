@@ -16,7 +16,7 @@ To test the app, launch it in the Android emulator and wait ~2 minutes for the R
 | Sign-in | Google through Supabase Auth; guests can browse, search, and compare without signing in. The API verifies each access token against the project's signing keys and creates the app account on first use. |
 | Decks | Full deck API and app screens to create, rename, and delete decks, and add or remove catalog cards. Open My decks from Account. |
 | Admin | Users with the `ADMIN` role see Admin tools in the app: list users, change roles, and delete users (including their Supabase login when the server has the admin key). Promote the first admin with SQL; see below. |
-| Deployment | GitHub Actions tests every pull request; a push to `main` also publishes the API image to GHCR and asks Render to deploy it. |
+| Deployment | GitHub Actions tests every pull request; a push to `main` also publishes the API image to GHCR, and Render deploys `main` automatically. |
 
 ## API Endpoints:
 
@@ -108,7 +108,7 @@ All 13 screenshots are saved in [`docs/screenshots/`](docs/screenshots/).
 - [`frontend/README.md`](frontend/README.md): app configuration, sign-in, screens, and tests.
 - [`docs/openapi.yaml`](docs/openapi.yaml): API contract.
 - [`docs/supabase-deployment.md`](docs/supabase-deployment.md): Supabase setup, schema, and the one-time card import.
-- [`docs/render-deployment.md`](docs/render-deployment.md) and [`docs/CI-RENDER-DEPLOYMENT.md`](docs/CI-RENDER-DEPLOYMENT.md): Render service and the CI deploy (the `RENDER_DEPLOY_HOOK_URL` repository secret must be set for automatic deploys).
+- [`docs/render-deployment.md`](docs/render-deployment.md): Render service setup. Render deploys each push to `main` itself (Auto-Deploy: On Commit).
 - [`docs/superpowers/specs/`](docs/superpowers/specs/): feature designs, such as card comparison.
 
 Database credentials and the Supabase secret key stay on the server. The app only holds the
