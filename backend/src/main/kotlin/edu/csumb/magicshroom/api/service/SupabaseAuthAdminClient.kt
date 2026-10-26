@@ -42,12 +42,17 @@ class SupabaseRestAuthAdminClient(
 				.headers { if (key.startsWith("eyJ")) it.setBearerAuth(key) }
 				.retrieve()
 				.toBodilessEntity()
-		} catch (exception: RestClientResponseException) {
-			log.warn("Supabase Auth account deletion failed: HTTP {}, error_code={}", exception.statusCode.value(), errorCode(exception))
-			throw ServiceUnavailableException("Supabase Auth could not delete the account.")
 		} catch (exception: RestClientException) {
 			// Exception messages and response bodies may contain credentials or personal data.
-			log.warn("Supabase Auth account deletion failed without a usable response: {}", exception.javaClass.simpleName)
+			if (exception is RestClientResponseException) {
+				log.warn(
+					"Supabase Auth account deletion failed: HTTP {}, error_code={}",
+					exception.statusCode.value(),
+					errorCode(exception),
+				)
+			} else {
+				log.warn("Supabase Auth account deletion failed without a usable response: {}", exception.javaClass.simpleName)
+			}
 			throw ServiceUnavailableException("Supabase Auth could not delete the account.")
 		}
 	}
