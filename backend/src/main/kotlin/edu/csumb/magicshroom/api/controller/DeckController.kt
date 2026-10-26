@@ -1,6 +1,11 @@
 package edu.csumb.magicshroom.api.controller
 
 import edu.csumb.magicshroom.api.auth.CurrentUser
+import edu.csumb.magicshroom.api.config.BAD_REQUEST
+import edu.csumb.magicshroom.api.config.BEARER_AUTH
+import edu.csumb.magicshroom.api.config.CONFLICT
+import edu.csumb.magicshroom.api.config.NOT_FOUND
+import edu.csumb.magicshroom.api.config.UNAUTHORIZED
 import edu.csumb.magicshroom.api.dto.DeckCardCreate
 import edu.csumb.magicshroom.api.dto.DeckCardPatch
 import edu.csumb.magicshroom.api.dto.DeckCardResponse
@@ -8,6 +13,10 @@ import edu.csumb.magicshroom.api.dto.DeckCreate
 import edu.csumb.magicshroom.api.dto.DeckPatch
 import edu.csumb.magicshroom.api.dto.DeckResponse
 import edu.csumb.magicshroom.api.service.DeckService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
@@ -26,11 +35,17 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 /** `/api/v1/decks`: the signed-in user's own decks and the cards in them. */
+@Tag(name = "Decks", description = "The signed-in user's decks and the cards in them. Every route needs a bearer token.")
+@SecurityRequirement(name = BEARER_AUTH)
 @RestController
 @RequestMapping("/api/v1/decks")
 class DeckController(private val deckService: DeckService) {
 
 	/** Lists my decks, optionally filtered by name. */
+	@Operation(summary = "List my decks", description = "Optionally filters by deck name (case-insensitive substring).")
+	@ApiResponse(responseCode = "200", description = "The signed-in user's decks")
+	@ApiResponse(responseCode = "400", ref = BAD_REQUEST)
+	@ApiResponse(responseCode = "401", ref = UNAUTHORIZED)
 	@GetMapping
 	fun list(
 		user: CurrentUser,
@@ -39,6 +54,10 @@ class DeckController(private val deckService: DeckService) {
 		deckService.list(user, name)
 
 	/** Creates an empty deck and returns it with a `Location` header. */
+	@Operation(summary = "Create a deck")
+	@ApiResponse(responseCode = "201", description = "The new, empty deck, with its URL in the Location header")
+	@ApiResponse(responseCode = "400", ref = BAD_REQUEST)
+	@ApiResponse(responseCode = "401", ref = UNAUTHORIZED)
 	@PostMapping
 	fun create(user: CurrentUser, @Valid @RequestBody request: DeckCreate): ResponseEntity<DeckResponse> {
 		val deck = deckService.create(user, request)
@@ -46,20 +65,45 @@ class DeckController(private val deckService: DeckService) {
 	}
 
 	/** One of my decks with its cards. */
+	@Operation(
+		summary = "Get one of my decks",
+		description = "Only the signed-in user's own decks are visible; another user's deck returns 404.",
+	)
+	@ApiResponse(responseCode = "200", description = "The deck and its cards")
+	@ApiResponse(responseCode = "401", ref = UNAUTHORIZED)
+	@ApiResponse(responseCode = "404", ref = NOT_FOUND)
 	@GetMapping("/{deckId}")
 	fun get(user: CurrentUser, @PathVariable @Min(1) deckId: Long): DeckResponse = deckService.get(user, deckId)
 
 	/** Renames one of my decks. */
+	@Operation(summary = "Rename a deck")
+	@ApiResponse(responseCode = "200", description = "The renamed deck")
+	@ApiResponse(responseCode = "400", ref = BAD_REQUEST)
+	@ApiResponse(responseCode = "401", ref = UNAUTHORIZED)
+	@ApiResponse(responseCode = "404", ref = NOT_FOUND)
 	@PatchMapping("/{deckId}")
 	fun rename(user: CurrentUser, @PathVariable @Min(1) deckId: Long, @Valid @RequestBody patch: DeckPatch): DeckResponse =
 		deckService.rename(user, deckId, patch)
 
 	/** Deletes one of my decks and its cards. */
+	@Operation(summary = "Delete a deck")
+	@ApiResponse(responseCode = "204", description = "Deck deleted")
+	@ApiResponse(responseCode = "401", ref = UNAUTHORIZED)
+	@ApiResponse(responseCode = "404", ref = NOT_FOUND)
 	@DeleteMapping("/{deckId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	fun delete(user: CurrentUser, @PathVariable @Min(1) deckId: Long) = deckService.delete(user, deckId)
 
 	/** Adds a card to one of my decks. */
+	@Operation(
+		summary = "Add a card to a deck",
+		description = "Quantity defaults to 1 and section to MAINBOARD. A card already in the deck is a 409; PATCH it instead.",
+	)
+	@ApiResponse(responseCode = "201", description = "The new deck entry")
+	@ApiResponse(responseCode = "400", ref = BAD_REQUEST)
+	@ApiResponse(responseCode = "401", ref = UNAUTHORIZED)
+	@ApiResponse(responseCode = "404", ref = NOT_FOUND)
+	@ApiResponse(responseCode = "409", ref = CONFLICT)
 	@PostMapping("/{deckId}/cards")
 	@ResponseStatus(HttpStatus.CREATED)
 	fun addCard(
@@ -69,6 +113,11 @@ class DeckController(private val deckService: DeckService) {
 	): DeckCardResponse = deckService.addCard(user, deckId, request)
 
 	/** Changes a card's quantity or section in one of my decks. */
+	@Operation(summary = "Change a deck entry", description = "Updates the quantity, the section, or both.")
+	@ApiResponse(responseCode = "200", description = "The updated deck entry")
+	@ApiResponse(responseCode = "400", ref = BAD_REQUEST)
+	@ApiResponse(responseCode = "401", ref = UNAUTHORIZED)
+	@ApiResponse(responseCode = "404", ref = NOT_FOUND)
 	@PatchMapping("/{deckId}/cards/{cardId}")
 	fun updateCard(
 		user: CurrentUser,
@@ -78,6 +127,10 @@ class DeckController(private val deckService: DeckService) {
 	): DeckCardResponse = deckService.updateCard(user, deckId, cardId, patch)
 
 	/** Removes a card from one of my decks. */
+	@Operation(summary = "Remove a card from a deck")
+	@ApiResponse(responseCode = "204", description = "Card removed from the deck")
+	@ApiResponse(responseCode = "401", ref = UNAUTHORIZED)
+	@ApiResponse(responseCode = "404", ref = NOT_FOUND)
 	@DeleteMapping("/{deckId}/cards/{cardId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	fun removeCard(user: CurrentUser, @PathVariable @Min(1) deckId: Long, @PathVariable @Min(1) cardId: Long) =

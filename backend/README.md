@@ -3,6 +3,18 @@
 Spring Boot/Kotlin API for the card catalog and personal decks. The API contract is in
 [`../docs/openapi.yaml`](../docs/openapi.yaml).
 
+## Live links
+
+- API: <https://magicshroom.onrender.com> (the free Render instance can take about 2 minutes to wake up)
+- Swagger UI: <https://magicshroom.onrender.com/swagger-ui.html> (generated from the controller annotations;
+  click **Authorize** and paste a Supabase access token for protected routes)
+- OpenAPI JSON: <https://magicshroom.onrender.com/v3/api-docs>
+- Docker image: `ghcr.io/notacatgirl/magicshroom-api:main`, built and published by CI on every push to `main`
+- Design docs: [ER diagram](../docs/er-diagram.md), [auth sequence](../docs/auth-sequence.md),
+  [error model](../docs/error-model.md), [ADRs](../docs/adr/)
+
+Running locally, the same docs are at <http://localhost:8080/swagger-ui.html>.
+
 ## Run
 
 Use JDK 25. Production is the default profile and requires PostgreSQL plus a Supabase project:
@@ -72,6 +84,13 @@ Do not set the import path in the Render service's normal start command.
 From the repository root, fill in `backend/.env` from `.env.example` and run `docker compose up` to build
 and start the API at `http://localhost:8080` using your Supabase database. Docker must be running;
 use `docker compose up --build` to rebuild after backend changes.
+
+To run the image CI published instead of building it (run `docker login ghcr.io` first if the
+package is private):
+
+```bash
+docker run --rm -p 8080:8080 --env-file backend/.env ghcr.io/notacatgirl/magicshroom-api:main
+```
 
 `docker build -t magicshroom-api .` builds a production JAR in a JDK 25 stage and runs it from a
 JRE 25 image. The image exposes `/actuator/health`; pass database and Supabase settings as runtime

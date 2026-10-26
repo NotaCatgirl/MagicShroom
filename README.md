@@ -6,6 +6,20 @@ Jetpack Compose and Supabase Auth.
 
 To test the app, launch it in the Android emulator and wait ~2 minutes for the Render API to spin up before using it.
 
+## Live links
+
+| What | Where |
+|---|---|
+| Live API | <https://magicshroom.onrender.com> |
+| Swagger UI | <https://magicshroom.onrender.com/swagger-ui.html> |
+| Generated OpenAPI JSON | <https://magicshroom.onrender.com/v3/api-docs> |
+| Hand-written API contract | [`docs/openapi.yaml`](docs/openapi.yaml) |
+| Docker image (built by CI) | `ghcr.io/notacatgirl/magicshroom-api:main` |
+| Android debug APK | [GitHub Releases](https://github.com/NotaCatgirl/MagicShroom/releases) |
+| CI runs | [GitHub Actions](https://github.com/NotaCatgirl/MagicShroom/actions) |
+
+The free Render instance sleeps when idle: the first request can take about 2 minutes.
+
 ## What works today
 
 | Area | Status |
@@ -28,6 +42,10 @@ Base URL: [magicshroom.onrender.com](https://magicshroom.onrender.com)
 - `GET /api/v1/cards/{cardId}/similar`
 - `GET /api/v1/decks`
 
+Every endpoint, with parameters, responses, and a **Try it out** button, is in
+[Swagger UI](https://magicshroom.onrender.com/swagger-ui.html). For protected routes, click
+**Authorize** and paste a Supabase access token.
+
 The Render API takes ~2 minutes to start up after being idle.
 
 ## Run it locally (App runs on Render by default)
@@ -35,7 +53,7 @@ The Render API takes ~2 minutes to start up after being idle.
 1. Copy `.env.example` to `backend/.env` and fill in the Supabase values. The backend
    reads the database settings and `SUPABASE_URL`; the app's build reads `SUPABASE_URL` and
    `SUPABASE_PUBLISHABLE_KEY`.
-   Set `SUPABASE_AUTH_ADMIN_KEY` to your server-only Supabase secret key in `backend/.env` to enable user deletion (set it in Render's environment when testing the deployed API).
+   Set `SUPABASE_SECRET_KEY` (the name in `.env.example`; `SUPABASE_AUTH_ADMIN_KEY` also works) to your server-only Supabase secret key in `backend/.env` to enable user deletion (set it in Render's environment when testing the deployed API).
 2. Start the API from the repository root:
    ```bash
    set -a && . ./backend/.env && set +a && cd backend && ./gradlew bootRun
@@ -106,7 +124,12 @@ All 13 screenshots are saved in [`docs/screenshots/`](docs/screenshots/).
 
 - [`backend/README.md`](backend/README.md): API configuration, profiles, tests, and Docker.
 - [`frontend/README.md`](frontend/README.md): app configuration, sign-in, screens, and tests.
-- [`docs/openapi.yaml`](docs/openapi.yaml): API contract.
+- [`docs/README.md`](docs/README.md): index of the design documents.
+- [`docs/openapi.yaml`](docs/openapi.yaml): hand-written API contract.
+- [`docs/er-diagram.md`](docs/er-diagram.md): database tables and relationships.
+- [`docs/auth-sequence.md`](docs/auth-sequence.md): Google sign-in with PKCE and bearer-token checks.
+- [`docs/error-model.md`](docs/error-model.md): the Problem Details error format and status codes.
+- [`docs/adr/`](docs/adr/): architecture decision records (Supabase; one repository for API and app).
 - [`docs/supabase-deployment.md`](docs/supabase-deployment.md): Supabase setup, schema, and the one-time card import.
 - [`docs/render-deployment.md`](docs/render-deployment.md): Render service setup. Render deploys each push to `main` itself (Auto-Deploy: On Commit).
 - [`docs/superpowers/specs/`](docs/superpowers/specs/): feature designs, such as card comparison.
