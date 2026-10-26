@@ -1,5 +1,17 @@
 # MagicShroom Android app
 
+**Download:** the debug APK is attached to the latest
+[GitHub release](https://github.com/NotaCatgirl/MagicShroom/releases). It talks to the live API at
+<https://magicshroom.onrender.com> ([Swagger UI](https://magicshroom.onrender.com/swagger-ui.html)).
+Screenshots of every screen are in [`../docs/screenshots/`](../docs/screenshots/).
+
+To use a local API in Docker instead (setup in [`backend/README.md`](../backend/README.md)):
+
+```bash
+docker compose up                                              # repository root
+./gradlew :app:installDebug -PbackendUrl=http://10.0.2.2:8080  # second terminal, in frontend/
+```
+
 The Compose app opens a public searchable card gallery with the MagicShroom logo above the
 search bar. Guests can search, open card details, and compare cards without signing in. Card data
 and image URLs come from the backend's public card endpoints; the app loads scans from Scryfall.
