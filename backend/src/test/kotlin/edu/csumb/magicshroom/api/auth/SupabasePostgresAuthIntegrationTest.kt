@@ -187,8 +187,8 @@ class SupabasePostgresAuthIntegrationTest {
 
         val deletionRequest = authRequests.lastOrNull { it.method == "DELETE" }
         assertNotNull(deletionRequest)
-        assertEquals("test-admin-key", deletionRequest?.getHeader("apikey"))
-        assertEquals("Bearer test-admin-key", deletionRequest?.getHeader("Authorization"))
+        assertEquals("sb_secret_test_admin_key", deletionRequest?.getHeader("apikey"))
+        assertEquals(null, deletionRequest?.getHeader("Authorization"))
     }
 
     /** Ranks similar cards in PostgreSQL exactly like the Kotlin rules, on a route that needs no token. */
@@ -293,7 +293,7 @@ class SupabasePostgresAuthIntegrationTest {
             registry.add("spring.datasource.username") { postgres.getUsername() }
             registry.add("spring.datasource.password") { postgres.getPassword() }
             registry.add("magicshroom.auth.issuer", ::issuerUrl)
-            registry.add("magicshroom.auth.admin-key") { "test-admin-key" }
+            registry.add("magicshroom.auth.admin-key") { "sb_secret_test_admin_key" }
         }
 
         /** Returns the mock Supabase Auth issuer shared by the test JWTs and API decoder. */
