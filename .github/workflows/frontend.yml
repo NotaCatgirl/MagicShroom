@@ -22,3 +22,5 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       # detekt fails the job on any finding not in config/detekt/baseline.xml. The backend workflow
       # gets detekt from `./gradlew build`, whose check task depends on it.
+      # Live Render API tests stay opt-in (-PliveApiTests=true) so a cold start can't fail CI.
+      - run: ./gradlew :app:detekt :app:testDebugUnitTest :app:assembleDebug

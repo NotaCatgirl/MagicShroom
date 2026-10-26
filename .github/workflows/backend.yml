@@ -1,6 +1,7 @@
 name: Backend CI and deployment
 
 # Keep this workflow on every PR so a required status never disappears due to path filters.
+# Render deploys main itself (Auto-Deploy: On Commit), so this workflow only tests and publishes the image.
 on:
   pull_request:
   push:
@@ -71,22 +72,3 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  deploy-render:
-    name: Deploy published image to Render
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: publish-image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Render deploy for this commit's image
-        env:
-          IMAGE_URL: ghcr.io/notacatgirl/magicshroom-api:${{ github.sha }}
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: |
-          if [[ -z "$RENDER_DEPLOY_HOOK_URL" ]]; then
-            echo "::error::Add the Render service deploy hook as the RENDER_DEPLOY_HOOK_URL repository secret."
-            exit 1
-          fi
-          curl --fail --silent --show-error --get \
-            --data-urlencode "imgURL=$IMAGE_URL" \
-            "$RENDER_DEPLOY_HOOK_URL"
